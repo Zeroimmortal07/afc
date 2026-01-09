@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFC - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-body">
+    <!-- Admin Navigation -->
+    <header class="admin-header">
+        <div class="container">
+            <div class="admin-nav">
+                <div class="admin-logo">
+                    <i class="fas fa-crown"></i>
+                    <h1>Admin Dashboard</h1>
+                    <span class="live-badge">Live</span>
+                </div>
+                <div class="admin-actions">
+                    <button class="btn btn-secondary" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="btn btn-secondary" onclick="navigateHome()">
+                        <i class="fas fa-home"></i> Home
+                    </button>
+                    <button class="btn btn-secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Admin Container -->
+    <main class="admin-container">
+        <div class="container">
+            <!-- Dashboard Stats -->
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalItems">0</h3>
+                        <p>Total Items</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalOrders">0</h3>
+                        <p>Total Orders</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="completedOrders">0</h3>
+                        <p>Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalRevenue">₹0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="pendingOrders">0</h3>
+                        <p>Pending Orders</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="switchTab('orders')">
+                    <i class="fas fa-shopping-bag"></i> Orders
+                </button>
+                <button class="tab-btn" onclick="switchTab('menu')">
+                    <i class="fas fa-utensils"></i> Manage Menu
+                </button>
+            </div>
+
+            <!-- ORDERS TAB -->
+            <div class="admin-tab active" id="ordersTab">
+                <div class="section-header">
+                    <h2>Customer Orders</h2>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" onclick="filterOrders('all')">All</button>
+                        <button class="filter-btn" onclick="filterOrders('pending')">Pending</button>
+                        <button class="filter-btn" onclick="filterOrders('completed')">Completed</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-clock"></i> Time</th>
+                                <th><i class="fas fa-user"></i> Customer</th>
+                                <th><i class="fas fa-phone"></i> Phone</th>
+                                <th><i class="fas fa-boxes"></i> Items</th>
+                                <th><i class="fas fa-rupee-sign"></i> Total</th>
+                                <th><i class="fas fa-info-circle"></i> Status</th>
+                                <th><i class="fas fa-credit-card"></i> Payment</th>
+                                <th><i class="fas fa-bolt"></i> Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <!-- Orders will be loaded here -->
+                        </tbody>
+                    </table>
+                    <div class="no-data" id="noOrders">
+                        <i class="fas fa-inbox"></i>
+                        <p>No orders yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENU TAB -->
+            <div class="admin-tab" id="menuTab">
+                <div class="section-header">
+                    <h2>Menu Items</h2>
+                    <button class="btn btn-primary" onclick="openAddItemModal()">
+                        <i class="fas fa-plus"></i> Add New Item
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Menu items will be loaded here -->
+                        </tbody>
+                    </table>
+                    <div class="no-data" id="noItems">
+                        <i class="fas fa-box-open"></i>
+                        <p>No menu items yet. Add one to get started!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Item Modal -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Item</h2>
+                <button class="close-btn" onclick="closeItemModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="itemForm" class="item-form">
+                    <div class="form-group">
+                        <label>Item Name *</label>
+                        <input type="text" id="itemName" required placeholder="e.g., Chicken Biryani">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="itemCategory" required>
+                                <option value="">Select Category</option>
+                                <option value="curry">Curry</option>
+                                <option value="biryani">Biryani</option>
+                                <option value="bread">Bread</option>
+                                <option value="beverages">Beverages</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (₹) *</label>
+                            <input type="number" id="itemPrice" required min="0" placeholder="150">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="itemDescription" placeholder="Brief description of the item"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Emoji Icon</label>
+                        <input type="text" id="itemEmoji" value="🍽️" placeholder="🍛">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Item Image (Optional)</label>
+                        <div class="image-upload-container">
+                            <input type="file" id="itemImage" accept="image/*" onchange="handleImageUpload(event)">
+                            <p>Supported: JPG, PNG, GIF (Max 5MB)</p>
+                        </div>
+                        <div class="image-preview" id="imagePreview">
+                            <p>No image selected</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeItemModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveItem()">
+                    <i class="fas fa-save"></i> Save Item
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <button class="close-btn" onclick="closeOrderModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="orderDetails">
+                    <!-- Order details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeOrderModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
