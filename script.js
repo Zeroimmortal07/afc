@@ -158,12 +158,27 @@ function renderMenu() {
                 ? `<img src="${item.image}" alt="${item.name || 'Item'}" class="menu-card-image" loading="lazy">`
                 : `<div class="menu-card-emoji">${item.emoji || '🍽️'}</div>`;
             
+            // Logic: Show Add button or Quantity controls
+            const actionButton = inCart > 0 
+                ? `<div class="card-qty-control">
+                       <button class="qty-action-btn" onclick="updateQuantity(${item.id}, -1)">
+                           <i class="fas fa-minus"></i>
+                       </button>
+                       <span class="qty-display">${inCart}</span>
+                       <button class="qty-action-btn" onclick="updateQuantity(${item.id}, 1)">
+                           <i class="fas fa-plus"></i>
+                       </button>
+                   </div>`
+                : `<button class="btn-add-to-cart" onclick="addToCart(${item.id})">
+                        <i class="fas fa-plus"></i>
+                        <span>Add</span>
+                   </button>`;
+
             return `
                 <article class="menu-card" data-id="${item.id}">
                     <div class="menu-card-visual">
                         ${imageHTML}
                         <span class="menu-card-category">${item.category || 'Other'}</span>
-                        ${inCart > 0 ? `<span class="menu-card-in-cart">${inCart} in cart</span>` : ''}
                     </div>
                     <div class="menu-card-content">
                         <h3 class="menu-card-title">${item.name || 'Unnamed Item'}</h3>
@@ -173,10 +188,7 @@ function renderMenu() {
                                 <span class="price-currency">₹</span>
                                 <span class="price-amount">${item.price || 0}</span>
                             </div>
-                            <button class="btn-add-to-cart" onclick="addToCart(${item.id})">
-                                <i class="fas fa-plus"></i>
-                                <span>Add</span>
-                            </button>
+                            ${actionButton}
                         </div>
                     </div>
                 </article>
@@ -518,47 +530,125 @@ function setupFormListener() {
     setupEventListeners();
 }
 
-// Place Order via WhatsApp
+// ============================================
+// GOOGLE SHEETS API CONFIGURATION
+// ============================================
+function sendOrderToSheet(phone, items, total) {
+  fetch("https://script.google.com/macros/s/AKfycbyjr6GTwbHKJ6QP6wNigTHI7iLfCSR0dbMZTDumKnTLI_NSbjbeAYlAmEqWLHknqBK24g/exec", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      phone: phone,
+      items: items,
+      total: total
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Stored in Sheet:", data);
+  })
+  .catch(err => {
+    console.error("Sheet error:", err);
+  });
+}
+
+/**
+ * Build WhatsApp message from order data
+ * @param {Object} details - Customer and order details
+ * @returns {string} - Formatted message
+ */
+function buildWhatsAppMessage(details) {
+    const { name, phone, address, items, total } = details;
+    
+    return `*🍽️ AFC Order*
+
+*Customer Details:*
+📛 Name: ${name}
+📱 Phone: ${phone}
+📍 Address: ${address}
+
+*Order Items:*
+${items}
+
+*💰 Total: ₹${total}*
+
+_Please confirm this order_`;
+}
+
+/**
+ * Open WhatsApp with prefilled message
+ * @param {string} message - Message to send
+ */
+function openWhatsApp(message) {
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappNumber = BUSINESS_WHATSAPP_NUMBER.replace(/\D/g, '');
+    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    window.open(whatsappURL, '_blank');
+}
+
+/**
+ * Main order submission handler
+ * Flow: Validate → Send to Sheets → Open WhatsApp → Clear cart
+ */
 function placeOrderViaWhatsApp() {
+    // 1. Get form values
     const name = document.getElementById('customerName').value.trim();
     const countryCode = document.getElementById('countryCode').value;
     const mobileNumber = document.getElementById('mobileNumber').value.trim();
     const address = document.getElementById('deliveryAddress').value.trim();
 
+    // 2. Validate required fields
     if (!name || !mobileNumber || !address) {
         showToast('Please fill all required fields!', 'error');
         return;
     }
 
+    if (cart.length === 0) {
+        showToast('Your cart is empty!', 'error');
+        return;
+    }
+
+    // 3. Prepare order data
+    const phone = `${countryCode}${mobileNumber}`;
     const orderItems = cart.map(item =>
         `• ${item.quantity}x ${item.name} - ₹${item.price * item.quantity}`
     ).join('\n');
-
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    const message = `*🍽️ AFC Order*
+    // 4. Show loading state
+    const submitBtn = document.querySelector('.btn-whatsapp-order');
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Sending...</span>';
+    }
 
-*Customer Details:*
-📛 Name: ${name}
-📱 Phone: ${countryCode}${mobileNumber}
-📍 Address: ${address}
+    // 5. Send to Google Sheets
+    sendOrderToSheet(phone, orderItems, total);
 
-*Order Items:*
-${orderItems}
+    // 6. Restore button state
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
 
-*💰 Total: ₹${total}*
+    // 7. Build WhatsApp message and open
+    const whatsappMessage = buildWhatsAppMessage({
+        name,
+        phone,
+        address,
+        items: orderItems,
+        total
+    });
 
-_Please confirm this order_`;
+    openWhatsApp(whatsappMessage);
 
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = BUSINESS_WHATSAPP_NUMBER.replace(/\D/g, '');
-    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-    
-    window.open(whatsappURL, '_blank');
-
+    // 8. Clear order and show success
+    showToast('Order placed successfully!', 'success');
     setTimeout(() => {
         clearOrder();
-        showToast('Order sent! Check WhatsApp for confirmation.', 'success');
     }, 500);
 }
 

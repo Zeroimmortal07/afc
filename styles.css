@@ -3445,3 +3445,43 @@ body {
     opacity: 1;
     visibility: visible;
 }
+
+/* Card Quantity Controls */
+.card-qty-control {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+    height: 44px;
+    min-width: 100px;
+}
+
+.qty-action-btn {
+    background: none;
+    border: none;
+    color: white;
+    width: 32px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+    border-radius: 8px;
+}
+
+.qty-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.qty-display {
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    flex: 1;
+    text-align: center;
+    user-select: none;
+}
