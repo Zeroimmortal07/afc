@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFC - Food Delivery</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <h1>AFC</h1>
+                </div>
+                <div class="header-right">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Search food...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="cart-icon" onclick="openCart()">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Delicious Food Delivery</h2>
+            <p>Order your favorite meals with ease</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Category Filter -->
+        <div class="categories">
+            <button class="category-btn active" onclick="filterCategory('all')">All</button>
+            <button class="category-btn" onclick="filterCategory('curry')">Curry</button>
+            <button class="category-btn" onclick="filterCategory('biryani')">Biryani</button>
+            <button class="category-btn" onclick="filterCategory('bread')">Bread</button>
+            <button class="category-btn" onclick="filterCategory('beverages')">Beverages</button>
+        </div>
+
+        <!-- Menu Grid -->
+        <div class="menu-grid" id="menuGrid">
+            <!-- Menu items will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content cart-modal">
+            <div class="modal-header">
+                <h2>Shopping Cart</h2>
+                <button class="close-btn" onclick="closeCart()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="cart-items" id="cartItems">
+                    <!-- Cart items will be loaded here -->
+                </div>
+                <div class="cart-empty" id="cartEmpty">
+                    <p>Your cart is empty</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="cart-total">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">₹0</span>
+                </div>
+                <button class="btn btn-primary" onclick="proceedToCheckout()" id="checkoutBtn">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Order Modal -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content review-modal">
+            <div class="modal-header">
+                <h2>Review Order</h2>
+                <button class="close-btn" onclick="closeReview()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="review-items" id="reviewItems">
+                    <!-- Order items will be loaded here -->
+                </div>
+                <div class="review-total">
+                    <span>Total</span>
+                    <span id="reviewTotal">₹0</span>
+                </div>
+
+                <form id="orderForm" class="order-form">
+                    <div class="form-group">
+                        <label for="customerName">Your Name</label>
+                        <input type="text" id="customerName" placeholder="Enter your name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobileNumber">Mobile Number</label>
+                        <div class="mobile-input">
+                            <select id="countryCode" class="country-code">
+                                <option value="+91">IN +91</option>
+                                <option value="+1">US +1</option>
+                                <option value="+44">UK +44</option>
+                                <option value="+61">AU +61</option>
+                            </select>
+                            <input type="tel" id="mobileNumber" placeholder="10 digit mobile number" required maxlength="10">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deliveryAddress">Delivery Address</label>
+                        <textarea id="deliveryAddress" placeholder="Enter your full address" rows="4" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-whatsapp">
+                        <i class="fab fa-whatsapp"></i>
+                        Place Order via WhatsApp
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="script.js"></script>
+</body>
+</html>
