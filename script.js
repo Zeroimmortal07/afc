@@ -1,208 +1,221 @@
 // ============================================
 // BUSINESS CONFIGURATION (SECURE)
 // ============================================
-// WhatsApp number is hardcoded here for security
-// Users cannot change this value from the frontend
 const BUSINESS_WHATSAPP_NUMBER = '+919167931883';
-// ============================================
+const STORAGE_KEY = 'menuItems';
 
 // Default Menu Data (fallback if localStorage is empty)
 const DEFAULT_MENU_DATA = [
-    {
-        id: 1,
-        name: "Chicken Curry",
-        price: 150,
-        category: "curry",
-        description: "Tender chicken in aromatic spices",
-        emoji: "🍛"
-    },
-    {
-        id: 2,
-        name: "Butter Chicken",
-        price: 180,
-        category: "curry",
-        description: "Creamy and delicious butter chicken",
-        emoji: "🍛"
-    },
-    {
-        id: 3,
-        name: "Dal Makhani",
-        price: 120,
-        category: "curry",
-        description: "Rich and creamy lentil curry",
-        emoji: "🍲"
-    },
-    {
-        id: 4,
-        name: "Chicken Biryani",
-        price: 220,
-        category: "biryani",
-        description: "Fragrant rice with tender chicken",
-        emoji: "🍚"
-    },
-    {
-        id: 5,
-        name: "Mutton Biryani",
-        price: 250,
-        category: "biryani",
-        description: "Premium biryani with tender mutton",
-        emoji: "🍚"
-    },
-    {
-        id: 6,
-        name: "Vegetable Biryani",
-        price: 140,
-        category: "biryani",
-        description: "Mixed vegetables with aromatic rice",
-        emoji: "🍚"
-    },
-    {
-        id: 7,
-        name: "Naan",
-        price: 40,
-        category: "bread",
-        description: "Soft and fluffy Indian bread",
-        emoji: "🍞"
-    },
-    {
-        id: 8,
-        name: "Roti",
-        price: 20,
-        category: "bread",
-        description: "Traditional Indian flatbread",
-        emoji: "🫓"
-    },
-    {
-        id: 9,
-        name: "Paratha",
-        price: 50,
-        category: "bread",
-        description: "Flaky stuffed Indian bread",
-        emoji: "🥪"
-    },
-    {
-        id: 10,
-        name: "Mango Lassi",
-        price: 60,
-        category: "beverages",
-        description: "Refreshing mango yogurt drink",
-        emoji: "🥤"
-    },
-    {
-        id: 11,
-        name: "Masala Chai",
-        price: 30,
-        category: "beverages",
-        description: "Traditional spiced tea",
-        emoji: "☕"
-    },
-    {
-        id: 12,
-        name: "Fresh Juice",
-        price: 50,
-        category: "beverages",
-        description: "Fresh fruit juice",
-        emoji: "🧃"
-    }
+    { id: 1, name: "Chicken Curry", price: 150, category: "curry", description: "Tender chicken in aromatic spices", emoji: "🍛", image: null },
+    { id: 2, name: "Butter Chicken", price: 180, category: "curry", description: "Creamy and delicious butter chicken", emoji: "🍛", image: null },
+    { id: 3, name: "Dal Makhani", price: 120, category: "curry", description: "Rich and creamy lentil curry", emoji: "🍲", image: null },
+    { id: 4, name: "Chicken Biryani", price: 220, category: "biryani", description: "Fragrant rice with tender chicken", emoji: "🍚", image: null },
+    { id: 5, name: "Mutton Biryani", price: 250, category: "biryani", description: "Premium biryani with tender mutton", emoji: "🍚", image: null },
+    { id: 6, name: "Vegetable Biryani", price: 140, category: "biryani", description: "Mixed vegetables with aromatic rice", emoji: "🍚", image: null },
+    { id: 7, name: "Naan", price: 40, category: "bread", description: "Soft and fluffy Indian bread", emoji: "🍞", image: null },
+    { id: 8, name: "Roti", price: 20, category: "bread", description: "Traditional Indian flatbread", emoji: "🫓", image: null },
+    { id: 9, name: "Paratha", price: 50, category: "bread", description: "Flaky stuffed Indian bread", emoji: "🥪", image: null },
+    { id: 10, name: "Mango Lassi", price: 60, category: "beverages", description: "Refreshing mango yogurt drink", emoji: "🥤", image: null },
+    { id: 11, name: "Masala Chai", price: 30, category: "beverages", description: "Traditional spiced tea", emoji: "☕", image: null },
+    { id: 12, name: "Fresh Juice", price: 50, category: "beverages", description: "Fresh fruit juice", emoji: "🧃", image: null }
 ];
 
-// Load menu from localStorage or use defaults
+// State Management
 let menuData = [];
+let cart = [];
+let currentFilter = 'all';
+let searchQuery = '';
+
+// Load menu from localStorage or use defaults
 function loadMenuFromStorage() {
     try {
-        const stored = localStorage.getItem('menuItems');
-        console.log('Loading from localStorage:', stored ? 'Found data' : 'No data');
+        const stored = localStorage.getItem(STORAGE_KEY);
+        console.log('[AFC] Loading from localStorage:', stored ? 'Found data' : 'No data');
         if (stored) {
             menuData = JSON.parse(stored);
-            console.log('Loaded menu items:', menuData.length, 'items');
+            console.log('[AFC] Loaded menu items:', menuData.length, 'items');
         } else {
             menuData = [...DEFAULT_MENU_DATA];
-            console.log('Using default menu:', menuData.length, 'items');
+            console.log('[AFC] Using default menu:', menuData.length, 'items');
         }
     } catch (e) {
-        console.error('Error loading menu from storage:', e);
+        console.error('[AFC] Error loading menu from storage:', e);
         menuData = [...DEFAULT_MENU_DATA];
     }
+    updateMenuItemCount();
+    updateCategoryCounts();
 }
-
-// Cart
-let cart = [];
-let currentFilter = "all";
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadMenuFromStorage();
     renderMenu();
-    setupFormListener();
-    
-    // Listen for storage changes (updates from admin page in other tabs)
-    window.addEventListener('storage', () => {
-        console.log('Storage event detected');
-        loadMenuFromStorage();
-        renderMenu();
+    setupEventListeners();
+    setupStorageSync();
+});
+
+// Real-time sync with admin panel
+function setupStorageSync() {
+    // Listen for storage changes from admin panel
+    window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY) {
+            console.log('[AFC] Storage change detected - syncing...');
+            loadMenuFromStorage();
+            renderMenu();
+            showToast('Menu updated!', 'success');
+        }
     });
     
-    // Also poll localStorage every 2 seconds as a backup
+    // Polling fallback for same-tab updates
     setInterval(() => {
-        const stored = localStorage.getItem('menuItems');
+        const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
             try {
                 const newMenu = JSON.parse(stored);
-                // Only re-render if data changed
                 if (JSON.stringify(newMenu) !== JSON.stringify(menuData)) {
-                    console.log('Menu changed detected via polling');
+                    console.log('[AFC] Menu change detected via polling');
                     menuData = newMenu;
                     renderMenu();
+                    updateCategoryCounts();
                 }
             } catch (e) {
-                console.error('Error parsing menu:', e);
+                console.error('[AFC] Polling error:', e);
             }
         }
-    }, 2000);
-});
+    }, 1500);
+}
+
+function refreshMenu() {
+    loadMenuFromStorage();
+    renderMenu();
+    showToast('Menu refreshed!', 'success');
+}
 
 // Render Menu
 function renderMenu() {
     const menuGrid = document.getElementById('menuGrid');
-    menuGrid.innerHTML = '';
-
-    const filteredMenu = currentFilter === 'all'
-        ? menuData
-        : menuData.filter(item => item.category === currentFilter);
-
-    filteredMenu.forEach(item => {
-        const menuItem = document.createElement('div');
-        menuItem.className = 'menu-item';
+    const emptyState = document.getElementById('emptyState');
+    
+    if (!menuGrid) return;
+    
+    // Apply filters
+    let filtered = menuData;
+    
+    if (currentFilter !== 'all') {
+        filtered = filtered.filter(item => item.category === currentFilter);
+    }
+    
+    if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(item => 
+            item.name.toLowerCase().includes(query) ||
+            item.description.toLowerCase().includes(query) ||
+            item.category.toLowerCase().includes(query)
+        );
+    }
+    
+    // Handle empty state
+    if (filtered.length === 0) {
+        menuGrid.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+    
+    if (emptyState) emptyState.style.display = 'none';
+    
+    // Render menu cards
+    menuGrid.innerHTML = filtered.map(item => {
+        const cartItem = cart.find(c => c.id === item.id);
+        const inCart = cartItem ? cartItem.quantity : 0;
         
-        // Show image if available, otherwise show emoji
         const imageHTML = item.image 
-            ? `<img src="${item.image}" alt="${item.name}" class="menu-item-image" style="object-fit: cover;">` 
-            : `<div class="menu-item-image">${item.emoji}</div>`;
+            ? `<img src="${item.image}" alt="${item.name}" class="menu-card-image" loading="lazy">`
+            : `<div class="menu-card-emoji">${item.emoji}</div>`;
         
-        menuItem.innerHTML = `
-            ${imageHTML}
-            <div class="menu-item-content">
-                <h3 class="menu-item-name">${item.name}</h3>
-                <p class="menu-item-description">${item.description}</p>
-                <div class="menu-item-footer">
-                    <span class="menu-item-price">₹${item.price}</span>
-                    <button class="btn-add" onclick="addToCart(${item.id})">Add</button>
+        return `
+            <article class="menu-card" data-id="${item.id}">
+                <div class="menu-card-visual">
+                    ${imageHTML}
+                    <span class="menu-card-category">${item.category}</span>
+                    ${inCart > 0 ? `<span class="menu-card-in-cart">${inCart} in cart</span>` : ''}
                 </div>
-            </div>
+                <div class="menu-card-content">
+                    <h3 class="menu-card-title">${item.name}</h3>
+                    <p class="menu-card-description">${item.description}</p>
+                    <div class="menu-card-footer">
+                        <div class="menu-card-price">
+                            <span class="price-currency">₹</span>
+                            <span class="price-amount">${item.price}</span>
+                        </div>
+                        <button class="btn-add-to-cart" onclick="addToCart(${item.id})">
+                            <i class="fas fa-plus"></i>
+                            <span>Add</span>
+                        </button>
+                    </div>
+                </div>
+            </article>
         `;
-        menuGrid.appendChild(menuItem);
-    });
+    }).join('');
+    
+    updateMenuItemCount();
 }
 
 // Filter Category
-function filterCategory(category) {
+function filterCategory(category, clickedBtn = null) {
     currentFilter = category;
     
-    // Update active button
-    document.querySelectorAll('.category-btn').forEach(btn => {
+    // Update active state on pills
+    document.querySelectorAll('.category-pill').forEach(btn => {
         btn.classList.remove('active');
     });
-    event.target.classList.add('active');
+    
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    } else {
+        const btn = document.querySelector(`.category-pill[data-category="${category}"]`);
+        if (btn) btn.classList.add('active');
+    }
+    
+    renderMenu();
+}
+
+function updateCategoryCounts() {
+    const counts = {
+        all: menuData.length,
+        curry: menuData.filter(i => i.category === 'curry').length,
+        biryani: menuData.filter(i => i.category === 'biryani').length,
+        bread: menuData.filter(i => i.category === 'bread').length,
+        beverages: menuData.filter(i => i.category === 'beverages').length
+    };
+    
+    Object.keys(counts).forEach(key => {
+        const el = document.getElementById(`count${key.charAt(0).toUpperCase() + key.slice(1)}`);
+        if (el) el.textContent = counts[key];
+    });
+}
+
+function updateMenuItemCount() {
+    const el = document.getElementById('menuItemCount');
+    if (el) el.textContent = menuData.length;
+}
+
+// Search Functionality
+function handleSearch(value) {
+    searchQuery = value;
+    renderMenu();
+}
+
+function resetFilters() {
+    currentFilter = 'all';
+    searchQuery = '';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    
+    document.querySelectorAll('.category-pill').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const allBtn = document.querySelector('.category-pill[data-category="all"]');
+    if (allBtn) allBtn.classList.add('active');
     
     renderMenu();
 }
@@ -210,85 +223,140 @@ function filterCategory(category) {
 // Add to Cart
 function addToCart(itemId) {
     const menuItem = menuData.find(item => item.id === itemId);
+    if (!menuItem) return;
+    
     const cartItem = cart.find(item => item.id === itemId);
 
     if (cartItem) {
         cartItem.quantity++;
     } else {
-        cart.push({
-            ...menuItem,
-            quantity: 1
-        });
+        cart.push({ ...menuItem, quantity: 1 });
     }
 
-    updateCartCount();
-    showNotification(`${menuItem.name} added to cart!`);
+    updateCartUI();
+    renderMenu();
+    showToast(`${menuItem.name} added to cart!`, 'success');
 }
 
-// Update Cart Count
+// Remove from Cart
+function removeFromCart(itemId) {
+    cart = cart.filter(item => item.id !== itemId);
+    updateCartUI();
+    renderCartItems();
+    renderMenu();
+}
+
+// Update Quantity
+function updateQuantity(itemId, delta) {
+    const cartItem = cart.find(item => item.id === itemId);
+    if (!cartItem) return;
+    
+    cartItem.quantity += delta;
+    
+    if (cartItem.quantity <= 0) {
+        removeFromCart(itemId);
+    } else {
+        updateCartUI();
+        renderCartItems();
+        renderMenu();
+    }
+}
+
+// Update Cart UI
+function updateCartUI() {
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
+    const cartCount = document.getElementById('cartCount');
+    if (cartCount) cartCount.textContent = count;
+    
+    const cartTotalPreview = document.getElementById('cartTotalPreview');
+    if (cartTotalPreview) cartTotalPreview.textContent = `₹${total}`;
+    
+    const cartItemCount = document.getElementById('cartItemCount');
+    if (cartItemCount) cartItemCount.textContent = `${count} item${count !== 1 ? 's' : ''}`;
+    
+    const subtotal = document.getElementById('subtotal');
+    const cartTotal = document.getElementById('cartTotal');
+    if (subtotal) subtotal.textContent = `₹${total}`;
+    if (cartTotal) cartTotal.textContent = `₹${total}`;
+    
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    if (checkoutBtn) checkoutBtn.disabled = cart.length === 0;
+}
+
+// Legacy function support
 function updateCartCount() {
-    const count = cart.reduce((total, item) => total + item.quantity, 0);
-    document.getElementById('cartCount').textContent = count;
+    updateCartUI();
 }
 
 // Open Cart
 function openCart() {
     document.getElementById('cartModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
     renderCartItems();
 }
 
 // Close Cart
 function closeCart() {
     document.getElementById('cartModal').classList.remove('active');
+    document.body.style.overflow = '';
 }
 
 // Render Cart Items
 function renderCartItems() {
     const cartItemsDiv = document.getElementById('cartItems');
     const cartEmpty = document.getElementById('cartEmpty');
-    const subtotal = document.getElementById('subtotal');
 
     if (cart.length === 0) {
         cartItemsDiv.innerHTML = '';
-        cartEmpty.style.display = 'block';
-        document.getElementById('checkoutBtn').disabled = true;
-        subtotal.textContent = '₹0';
+        if (cartEmpty) cartEmpty.style.display = 'flex';
         return;
     }
 
-    cartEmpty.style.display = 'none';
-    document.getElementById('checkoutBtn').disabled = false;
+    if (cartEmpty) cartEmpty.style.display = 'none';
 
     cartItemsDiv.innerHTML = cart.map(item => `
-        <div class="cart-item">
-            <div class="cart-item-info">
-                <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-quantity">Qty: ${item.quantity}</div>
+        <div class="cart-item-card">
+            <div class="cart-item-visual">
+                ${item.image 
+                    ? `<img src="${item.image}" alt="${item.name}">` 
+                    : `<span class="cart-item-emoji">${item.emoji}</span>`}
             </div>
-            <div class="cart-item-price">₹${item.price * item.quantity}</div>
-            <button class="cart-item-remove" onclick="removeFromCart(${item.id})">Remove</button>
+            <div class="cart-item-details">
+                <h4 class="cart-item-name">${item.name}</h4>
+                <p class="cart-item-price">₹${item.price} each</p>
+            </div>
+            <div class="cart-item-controls">
+                <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <span class="qty-value">${item.quantity}</span>
+                <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div class="cart-item-total">
+                ₹${item.price * item.quantity}
+            </div>
+            <button class="cart-item-remove-btn" onclick="removeFromCart(${item.id})">
+                <i class="fas fa-trash"></i>
+            </button>
         </div>
     `).join('');
 
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    subtotal.textContent = `₹${total}`;
-}
-
-// Remove from Cart
-function removeFromCart(itemId) {
-    cart = cart.filter(item => item.id !== itemId);
-    updateCartCount();
-    renderCartItems();
+    updateCartUI();
 }
 
 // Proceed to Checkout
 function proceedToCheckout() {
     if (cart.length === 0) {
-        alert('Your cart is empty!');
+        showToast('Your cart is empty!', 'error');
         return;
     }
     closeCart();
     document.getElementById('reviewModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
     renderReviewItems();
 }
 
@@ -299,10 +367,11 @@ function renderReviewItems() {
 
     reviewItems.innerHTML = cart.map(item => `
         <div class="review-item">
-            <div>
-                <div class="review-item-name">${item.quantity}x ${item.name}</div>
+            <div class="review-item-info">
+                <span class="review-item-qty">${item.quantity}x</span>
+                <span class="review-item-name">${item.name}</span>
             </div>
-            <div class="review-item-price">₹${item.price * item.quantity}</div>
+            <span class="review-item-price">₹${item.price * item.quantity}</span>
         </div>
     `).join('');
 
@@ -313,49 +382,89 @@ function renderReviewItems() {
 // Close Review
 function closeReview() {
     document.getElementById('reviewModal').classList.remove('active');
+    document.body.style.overflow = '';
 }
 
-// Setup Form Listener
-function setupFormListener() {
+// Setup Event Listeners
+function setupEventListeners() {
     const form = document.getElementById('orderForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        placeOrderViaWhatsApp();
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            placeOrderViaWhatsApp();
+        });
+    }
+    
+    // Close modals on backdrop click
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
     });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeCart();
+            closeReview();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.focus();
+        }
+    });
+}
+
+// Legacy alias
+function setupFormListener() {
+    setupEventListeners();
 }
 
 // Place Order via WhatsApp
 function placeOrderViaWhatsApp() {
-    const name = document.getElementById('customerName').value;
+    const name = document.getElementById('customerName').value.trim();
     const countryCode = document.getElementById('countryCode').value;
-    const mobileNumber = document.getElementById('mobileNumber').value;
-    const address = document.getElementById('deliveryAddress').value;
+    const mobileNumber = document.getElementById('mobileNumber').value.trim();
+    const address = document.getElementById('deliveryAddress').value.trim();
 
     if (!name || !mobileNumber || !address) {
-        alert('Please fill all fields!');
+        showToast('Please fill all required fields!', 'error');
         return;
     }
 
-    // Create order message
     const orderItems = cart.map(item =>
-        `${item.quantity}x ${item.name} - ₹${item.price * item.quantity}`
+        `• ${item.quantity}x ${item.name} - ₹${item.price * item.quantity}`
     ).join('\n');
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    const message = `*AFC Order*\n\n*Customer Details:*\nName: ${name}\nPhone: ${countryCode}${mobileNumber}\nAddress: ${address}\n\n*Order Items:*\n${orderItems}\n\n*Total: ₹${total}*\n\n*Please confirm this order*`;
+    const message = `*🍽️ AFC Order*
 
-    // Encode message for URL
+*Customer Details:*
+📛 Name: ${name}
+📱 Phone: ${countryCode}${mobileNumber}
+📍 Address: ${address}
+
+*Order Items:*
+${orderItems}
+
+*💰 Total: ₹${total}*
+
+_Please confirm this order_`;
+
     const encodedMessage = encodeURIComponent(message);
     const whatsappNumber = BUSINESS_WHATSAPP_NUMBER.replace(/\D/g, '');
-
-    // Open WhatsApp
     const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    
     window.open(whatsappURL, '_blank');
 
-    // Clear form and cart after placing order
     setTimeout(() => {
         clearOrder();
+        showToast('Order sent! Check WhatsApp for confirmation.', 'success');
     }, 500);
 }
 
@@ -363,12 +472,44 @@ function placeOrderViaWhatsApp() {
 function clearOrder() {
     document.getElementById('orderForm').reset();
     cart = [];
-    updateCartCount();
+    updateCartUI();
     closeReview();
-    showNotification('Order sent! Check WhatsApp for confirmation.');
+    renderMenu();
 }
 
-// Show Notification
+// Toast Notifications
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        // Fallback to old notification style
+        showNotification(message);
+        return;
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? 'check-circle' : 
+                 type === 'error' ? 'exclamation-circle' : 'info-circle';
+    
+    toast.innerHTML = `
+        <i class="fas fa-${icon}"></i>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Show Notification (Legacy Support)
 function showNotification(message) {
     const notification = document.createElement('div');
     notification.className = 'notification';

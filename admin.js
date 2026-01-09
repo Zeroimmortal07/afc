@@ -86,6 +86,12 @@ function loadOrdersData() {
 
 function saveMenuData() {
     localStorage.setItem(STORAGE_KEYS.MENU, JSON.stringify(adminState.menuData));
+    // Trigger storage event for other tabs/windows
+    window.dispatchEvent(new StorageEvent('storage', {
+        key: STORAGE_KEYS.MENU,
+        newValue: JSON.stringify(adminState.menuData),
+        storageArea: localStorage
+    }));
 }
 
 function saveOrdersData() {
@@ -240,13 +246,19 @@ function renderMenu() {
     const tbody = document.getElementById('itemsTableBody');
     const noData = document.getElementById('noItems');
 
+    // Update item count display
+    const itemCountEl = document.getElementById('itemCount');
+    if (itemCountEl) {
+        itemCountEl.textContent = `${adminState.menuData.length} items`;
+    }
+
     if (adminState.menuData.length === 0) {
         tbody.innerHTML = '';
-        noData.style.display = 'block';
+        if (noData) noData.style.display = 'block';
         return;
     }
 
-    noData.style.display = 'none';
+    if (noData) noData.style.display = 'none';
     tbody.innerHTML = '';
 
     adminState.menuData.forEach(item => {
@@ -475,6 +487,12 @@ function renderOrders() {
     const tbody = document.getElementById('ordersTableBody');
     const noData = document.getElementById('noOrders');
 
+    // Update order count display
+    const orderCountEl = document.getElementById('orderCount');
+    if (orderCountEl) {
+        orderCountEl.textContent = `${adminState.orders.length} orders`;
+    }
+
     let filtered = adminState.orders;
     if (adminState.currentFilter !== 'all') {
         filtered = adminState.orders.filter(o => o.status === adminState.currentFilter);
@@ -482,11 +500,11 @@ function renderOrders() {
 
     if (filtered.length === 0) {
         tbody.innerHTML = '';
-        noData.style.display = 'flex';
+        if (noData) noData.style.display = 'flex';
         return;
     }
 
-    noData.style.display = 'none';
+    if (noData) noData.style.display = 'none';
     tbody.innerHTML = '';
 
     filtered.forEach(order => {
@@ -577,8 +595,10 @@ function viewOrderDetails(orderId) {
 
 function filterOrders(status) {
     adminState.currentFilter = status;
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    document.querySelectorAll('.filter-badge').forEach(btn => btn.classList.remove('active'));
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
     renderOrders();
 }
 
@@ -595,7 +615,7 @@ function switchTab(tabName) {
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.classList.remove('active');
     });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    document.querySelectorAll('.tab-btn-new').forEach(btn => {
         btn.classList.remove('active');
     });
 
@@ -603,7 +623,11 @@ function switchTab(tabName) {
     const tab = document.getElementById(tabName + 'Tab');
     if (tab) tab.classList.add('active');
 
-    event.target.classList.add('active');
+    // Activate the clicked button
+    if (event && event.target) {
+        const btn = event.target.closest('.tab-btn-new');
+        if (btn) btn.classList.add('active');
+    }
 }
 
 // ============================================

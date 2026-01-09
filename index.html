@@ -3,140 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AFC - Food Delivery</title>
+    <title>AFC - Premium Food Delivery</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-    <!-- Navigation Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-utensils"></i>
-                    <h1>AFC</h1>
-                </div>
-                <div class="header-right">
-                    <div class="search-bar">
-                        <input type="text" placeholder="Search food...">
-                        <i class="fas fa-search"></i>
+<body class="home-body">
+    <!-- Modern Navigation Header -->
+    <header class="header-modern">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="logo-modern">
+                    <div class="logo-icon-wrapper">
+                        <i class="fas fa-utensils"></i>
                     </div>
-                    <div class="cart-icon" onclick="openCart()">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cartCount">0</span>
+                    <div class="logo-text-wrapper">
+                        <h1>AFC</h1>
+                        <span class="logo-tagline">Authentic Flavors</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-center">
+                <div class="search-bar-modern">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search for dishes, cuisines..." oninput="handleSearch(this.value)">
+                    <kbd class="search-shortcut">Ctrl+K</kbd>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-action-btn" onclick="refreshMenu()" title="Refresh Menu">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <div class="cart-wrapper" onclick="openCart()">
+                        <div class="cart-icon-modern">
+                            <i class="fas fa-shopping-bag"></i>
+                            <span class="cart-badge" id="cartCount">0</span>
+                        </div>
+                        <div class="cart-info">
+                            <span class="cart-label">Your Cart</span>
+                            <span class="cart-total-preview" id="cartTotalPreview">₹0</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h2>Delicious Food Delivery</h2>
-            <p>Order your favorite meals with ease</p>
+    <!-- Hero Section - Modern -->
+    <section class="hero-modern">
+        <div class="hero-bg-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+        <div class="hero-container">
+            <div class="hero-content-modern">
+                <div class="hero-badge">
+                    <i class="fas fa-star"></i>
+                    <span>Premium Quality Guaranteed</span>
+                </div>
+                <h2 class="hero-title">Delicious Food,<br>Delivered Fresh</h2>
+                <p class="hero-subtitle">Experience authentic Indian cuisine crafted with love. From aromatic biryanis to creamy curries, we bring the best to your doorstep.</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="stat-number" id="menuItemCount">12</span>
+                        <span class="stat-label">Menu Items</span>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Min Delivery</span>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <span class="stat-number">4.9</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-food-card hero-food-1">🍛</div>
+                <div class="hero-food-card hero-food-2">🍚</div>
+                <div class="hero-food-card hero-food-3">🥤</div>
+            </div>
         </div>
     </section>
 
     <!-- Main Content -->
-    <main class="container">
-        <!-- Category Filter -->
-        <div class="categories">
-            <button class="category-btn active" onclick="filterCategory('all')">All</button>
-            <button class="category-btn" onclick="filterCategory('curry')">Curry</button>
-            <button class="category-btn" onclick="filterCategory('biryani')">Biryani</button>
-            <button class="category-btn" onclick="filterCategory('bread')">Bread</button>
-            <button class="category-btn" onclick="filterCategory('beverages')">Beverages</button>
-        </div>
+    <main class="main-content">
+        <div class="content-container">
+            <!-- Category Filter - Modern Pills -->
+            <section class="categories-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fas fa-fire"></i>
+                        Explore Our Menu
+                    </h3>
+                    <p class="section-subtitle">Choose from our carefully curated categories</p>
+                </div>
+                <div class="categories-modern">
+                    <button class="category-pill active" onclick="filterCategory('all', this)" data-category="all">
+                        <span class="pill-icon">🍽️</span>
+                        <span class="pill-text">All Items</span>
+                        <span class="pill-count" id="countAll">12</span>
+                    </button>
+                    <button class="category-pill" onclick="filterCategory('curry', this)" data-category="curry">
+                        <span class="pill-icon">🍛</span>
+                        <span class="pill-text">Curry</span>
+                        <span class="pill-count" id="countCurry">3</span>
+                    </button>
+                    <button class="category-pill" onclick="filterCategory('biryani', this)" data-category="biryani">
+                        <span class="pill-icon">🍚</span>
+                        <span class="pill-text">Biryani</span>
+                        <span class="pill-count" id="countBiryani">3</span>
+                    </button>
+                    <button class="category-pill" onclick="filterCategory('bread', this)" data-category="bread">
+                        <span class="pill-icon">🍞</span>
+                        <span class="pill-text">Bread</span>
+                        <span class="pill-count" id="countBread">3</span>
+                    </button>
+                    <button class="category-pill" onclick="filterCategory('beverages', this)" data-category="beverages">
+                        <span class="pill-icon">🥤</span>
+                        <span class="pill-text">Beverages</span>
+                        <span class="pill-count" id="countBeverages">3</span>
+                    </button>
+                </div>
+            </section>
 
-        <!-- Menu Grid -->
-        <div class="menu-grid" id="menuGrid">
-            <!-- Menu items will be loaded here -->
+            <!-- Menu Grid - Modern Cards -->
+            <section class="menu-section">
+                <div class="menu-grid-modern" id="menuGrid">
+                    <!-- Menu items will be loaded here dynamically -->
+                </div>
+                
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-icon">🔍</div>
+                    <h3>No items found</h3>
+                    <p>Try adjusting your search or filter</p>
+                    <button class="btn-reset" onclick="resetFilters()">Show All Items</button>
+                </div>
+            </section>
         </div>
     </main>
 
-    <!-- Cart Modal -->
-    <div class="modal" id="cartModal">
-        <div class="modal-content cart-modal">
-            <div class="modal-header">
-                <h2>Shopping Cart</h2>
-                <button class="close-btn" onclick="closeCart()">&times;</button>
+    <!-- Cart Modal - Modern Slide Panel -->
+    <div class="modal-overlay" id="cartModal">
+        <div class="cart-panel">
+            <div class="cart-panel-header">
+                <div class="cart-header-left">
+                    <i class="fas fa-shopping-bag"></i>
+                    <div>
+                        <h2>Your Cart</h2>
+                        <span class="cart-item-count" id="cartItemCount">0 items</span>
+                    </div>
+                </div>
+                <button class="cart-close-btn" onclick="closeCart()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-body">
-                <div class="cart-items" id="cartItems">
+            
+            <div class="cart-panel-body">
+                <div class="cart-items-list" id="cartItems">
                     <!-- Cart items will be loaded here -->
                 </div>
-                <div class="cart-empty" id="cartEmpty">
-                    <p>Your cart is empty</p>
+                <div class="cart-empty-state" id="cartEmpty">
+                    <div class="empty-cart-icon">🛒</div>
+                    <h3>Your cart is empty</h3>
+                    <p>Add some delicious items to get started!</p>
+                    <button class="btn-browse" onclick="closeCart()">Browse Menu</button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <div class="cart-total">
-                    <span>Subtotal:</span>
-                    <span id="subtotal">₹0</span>
+            
+            <div class="cart-panel-footer">
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">₹0</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Total</span>
+                        <span id="cartTotal">₹0</span>
+                    </div>
                 </div>
-                <button class="btn btn-primary" onclick="proceedToCheckout()" id="checkoutBtn">Proceed to Checkout</button>
+                <button class="btn-checkout" onclick="proceedToCheckout()" id="checkoutBtn" disabled>
+                    <i class="fas fa-arrow-right"></i>
+                    Proceed to Checkout
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Review Order Modal -->
-    <div class="modal" id="reviewModal">
-        <div class="modal-content review-modal">
-            <div class="modal-header">
-                <h2>Review Order</h2>
-                <button class="close-btn" onclick="closeReview()">&times;</button>
+    <div class="modal-overlay" id="reviewModal">
+        <div class="review-panel">
+            <div class="review-panel-header">
+                <div class="review-header-left">
+                    <i class="fas fa-clipboard-check"></i>
+                    <div>
+                        <h2>Review Order</h2>
+                        <span>Confirm your details</span>
+                    </div>
+                </div>
+                <button class="cart-close-btn" onclick="closeReview()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-body">
-                <div class="review-items" id="reviewItems">
-                    <!-- Order items will be loaded here -->
-                </div>
-                <div class="review-total">
-                    <span>Total</span>
-                    <span id="reviewTotal">₹0</span>
-                </div>
-
-                <form id="orderForm" class="order-form">
-                    <div class="form-group">
-                        <label for="customerName">Your Name</label>
-                        <input type="text" id="customerName" placeholder="Enter your name" required>
+            
+            <div class="review-panel-body">
+                <!-- Order Summary -->
+                <div class="review-section">
+                    <h3 class="review-section-title">
+                        <i class="fas fa-receipt"></i>
+                        Order Summary
+                    </h3>
+                    <div class="review-items-list" id="reviewItems">
+                        <!-- Order items will be loaded here -->
                     </div>
+                    <div class="review-total-row">
+                        <span>Total Amount</span>
+                        <span id="reviewTotal">₹0</span>
+                    </div>
+                </div>
 
-                    <div class="form-group">
-                        <label for="mobileNumber">Mobile Number</label>
-                        <div class="mobile-input">
-                            <select id="countryCode" class="country-code">
-                                <option value="+91">IN +91</option>
-                                <option value="+1">US +1</option>
-                                <option value="+44">UK +44</option>
-                                <option value="+61">AU +61</option>
-                            </select>
-                            <input type="tel" id="mobileNumber" placeholder="10 digit mobile number" required maxlength="10">
+                <!-- Customer Details Form -->
+                <div class="review-section">
+                    <h3 class="review-section-title">
+                        <i class="fas fa-user"></i>
+                        Delivery Details
+                    </h3>
+                    <form id="orderForm" class="order-form-modern">
+                        <div class="form-field">
+                            <label for="customerName">
+                                <i class="fas fa-user"></i>
+                                Your Name
+                            </label>
+                            <input type="text" id="customerName" placeholder="Enter your full name" required>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="deliveryAddress">Delivery Address</label>
-                        <textarea id="deliveryAddress" placeholder="Enter your full address" rows="4" required></textarea>
-                    </div>
+                        <div class="form-field">
+                            <label for="mobileNumber">
+                                <i class="fas fa-phone"></i>
+                                Mobile Number
+                            </label>
+                            <div class="phone-input-group">
+                                <select id="countryCode" class="country-select">
+                                    <option value="+91">🇮🇳 +91</option>
+                                    <option value="+1">🇺🇸 +1</option>
+                                    <option value="+44">🇬🇧 +44</option>
+                                    <option value="+61">🇦🇺 +61</option>
+                                </select>
+                                <input type="tel" id="mobileNumber" placeholder="10-digit mobile number" required maxlength="10" pattern="[0-9]{10}">
+                            </div>
+                        </div>
 
-                    <button type="submit" class="btn btn-whatsapp">
-                        <i class="fab fa-whatsapp"></i>
-                        Place Order via WhatsApp
-                    </button>
-                </form>
+                        <div class="form-field">
+                            <label for="deliveryAddress">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Delivery Address
+                            </label>
+                            <textarea id="deliveryAddress" placeholder="Enter your complete delivery address with landmark" rows="3" required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-whatsapp-order">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>Place Order via WhatsApp</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Admin Login Footer -->
-    <footer class="admin-footer">
-        <div class="container">
-            <div class="admin-footer-content">
-                <p>Staff? Access the admin panel:</p>
-                <a href="admin.html" class="btn btn-admin">
-                    <i class="fas fa-crown"></i> Admin Dashboard
-                </a>
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Admin Footer - Modern -->
+    <footer class="footer-modern">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <i class="fas fa-utensils"></i>
+                        <span>AFC</span>
+                    </div>
+                    <p class="footer-tagline">Authentic Flavors, Delivered Fresh</p>
+                </div>
+                <div class="footer-actions">
+                    <p class="footer-admin-text">Restaurant Staff?</p>
+                    <a href="admin.html" class="btn-admin-modern">
+                        <i class="fas fa-crown"></i>
+                        <span>Admin Dashboard</span>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 AFC. All rights reserved.</p>
             </div>
         </div>
     </footer>
