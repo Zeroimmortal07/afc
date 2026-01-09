@@ -6,8 +6,8 @@
 const BUSINESS_WHATSAPP_NUMBER = '+919167931883';
 // ============================================
 
-// Menu Data
-const menuData = [
+// Default Menu Data (fallback if localStorage is empty)
+const DEFAULT_MENU_DATA = [
     {
         id: 1,
         name: "Chicken Curry",
@@ -106,14 +106,59 @@ const menuData = [
     }
 ];
 
+// Load menu from localStorage or use defaults
+let menuData = [];
+function loadMenuFromStorage() {
+    try {
+        const stored = localStorage.getItem('menuItems');
+        console.log('Loading from localStorage:', stored ? 'Found data' : 'No data');
+        if (stored) {
+            menuData = JSON.parse(stored);
+            console.log('Loaded menu items:', menuData.length, 'items');
+        } else {
+            menuData = [...DEFAULT_MENU_DATA];
+            console.log('Using default menu:', menuData.length, 'items');
+        }
+    } catch (e) {
+        console.error('Error loading menu from storage:', e);
+        menuData = [...DEFAULT_MENU_DATA];
+    }
+}
+
 // Cart
 let cart = [];
 let currentFilter = "all";
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    loadMenuFromStorage();
     renderMenu();
     setupFormListener();
+    
+    // Listen for storage changes (updates from admin page in other tabs)
+    window.addEventListener('storage', () => {
+        console.log('Storage event detected');
+        loadMenuFromStorage();
+        renderMenu();
+    });
+    
+    // Also poll localStorage every 2 seconds as a backup
+    setInterval(() => {
+        const stored = localStorage.getItem('menuItems');
+        if (stored) {
+            try {
+                const newMenu = JSON.parse(stored);
+                // Only re-render if data changed
+                if (JSON.stringify(newMenu) !== JSON.stringify(menuData)) {
+                    console.log('Menu changed detected via polling');
+                    menuData = newMenu;
+                    renderMenu();
+                }
+            } catch (e) {
+                console.error('Error parsing menu:', e);
+            }
+        }
+    }, 2000);
 });
 
 // Render Menu
@@ -128,8 +173,14 @@ function renderMenu() {
     filteredMenu.forEach(item => {
         const menuItem = document.createElement('div');
         menuItem.className = 'menu-item';
+        
+        // Show image if available, otherwise show emoji
+        const imageHTML = item.image 
+            ? `<img src="${item.image}" alt="${item.name}" class="menu-item-image" style="object-fit: cover;">` 
+            : `<div class="menu-item-image">${item.emoji}</div>`;
+        
         menuItem.innerHTML = `
-            <div class="menu-item-image">${item.emoji}</div>
+            ${imageHTML}
             <div class="menu-item-content">
                 <h3 class="menu-item-name">${item.name}</h3>
                 <p class="menu-item-description">${item.description}</p>

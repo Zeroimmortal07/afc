@@ -345,7 +345,7 @@ function saveItem() {
     } else {
         // Add new item
         const newId = Math.max(...adminState.menuData.map(i => i.id), 0) + 1;
-        adminState.menuData.push({
+        const newItem = {
             id: newId,
             name,
             category,
@@ -353,8 +353,11 @@ function saveItem() {
             description,
             emoji,
             image: adminState.currentItemImage || null
-        });
-        showNotification(`${name} added!`, 'success');
+        };
+        adminState.menuData.push(newItem);
+        
+        // Show success notification with item preview
+        showSuccessNotificationWithItem(newItem);
     }
 
     saveMenuData();
@@ -621,6 +624,46 @@ function showNotification(message, type = 'success') {
         notification.classList.remove('show');
         setTimeout(() => notification.remove(), 300);
     }, 3000);
+}
+
+function showSuccessNotificationWithItem(item) {
+    const notification = document.createElement('div');
+    notification.className = 'notification-success-full';
+    
+    const imageHTML = item.image 
+        ? `<img src="${item.image}" alt="${item.name}" class="success-item-image">` 
+        : `<div class="success-item-emoji">${item.emoji}</div>`;
+    
+    notification.innerHTML = `
+        <div class="success-notification-content">
+            <div class="success-notification-header">
+                <i class="fas fa-check-circle"></i>
+                <span>Item Added Successfully!</span>
+            </div>
+            <div class="success-item-preview">
+                ${imageHTML}
+                <div class="success-item-info">
+                    <h3>${item.name}</h3>
+                    <p class="success-item-category">${item.category}</p>
+                    <p class="success-item-price">₹${item.price}</p>
+                </div>
+            </div>
+            <button class="success-notification-close" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+
+    requestAnimationFrame(() => {
+        notification.classList.add('show');
+    });
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
 }
 
 function navigateHome() {
