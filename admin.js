@@ -266,6 +266,15 @@ function renderMenu() {
             ? `<img src="${item.image}" alt="${item.name}" class="table-item-image">`
             : `<span class="item-emoji">${item.emoji}</span>`;
 
+        // Format category display name
+        const categoryDisplay = item.category
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        
+        // Use 'other' class for custom categories not in predefined list
+        const badgeClass = PREDEFINED_CATEGORIES.includes(item.category) ? item.category : 'other';
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${item.id}</td>
@@ -275,7 +284,7 @@ function renderMenu() {
                     <span>${item.name}</span>
                 </div>
             </td>
-            <td><span class="badge badge-${item.category}">${item.category}</span></td>
+            <td><span class="badge badge-${badgeClass}">${categoryDisplay}</span></td>
             <td>₹${item.price}</td>
             <td>${item.description}</td>
             <td>
@@ -298,6 +307,9 @@ function openAddItemModal() {
     document.getElementById('itemForm').reset();
     document.getElementById('itemEmoji').value = '🍽️';
     document.getElementById('imagePreview').innerHTML = '<p>No image selected</p>';
+    // Reset custom category
+    document.getElementById('customCategoryWrapper').style.display = 'none';
+    document.getElementById('customCategory').value = '';
     document.getElementById('itemModal').classList.add('active');
     document.getElementById('itemName').focus();
 }
@@ -311,7 +323,7 @@ function editItem(itemId) {
 
     document.getElementById('modalTitle').textContent = 'Edit Item';
     document.getElementById('itemName').value = item.name;
-    document.getElementById('itemCategory').value = item.category;
+    setItemCategory(item.category); // Use new function for custom category support
     document.getElementById('itemPrice').value = item.price;
     document.getElementById('itemDescription').value = item.description;
     document.getElementById('itemEmoji').value = item.emoji;
@@ -329,7 +341,7 @@ function editItem(itemId) {
 
 function saveItem() {
     const name = document.getElementById('itemName').value.trim();
-    const category = document.getElementById('itemCategory').value;
+    const category = getSelectedCategory(); // Use new function for custom category support
     const price = parseInt(document.getElementById('itemPrice').value);
     const description = document.getElementById('itemDescription').value.trim();
     const emoji = document.getElementById('itemEmoji').value || '🍽️';
@@ -337,6 +349,12 @@ function saveItem() {
     // Validation
     if (!name || !category || !price) {
         showNotification('Please fill all required fields', 'error');
+        return;
+    }
+    
+    // Validate custom category if "other" is selected
+    if (document.getElementById('itemCategory').value === 'other' && !document.getElementById('customCategory').value.trim()) {
+        showNotification('Please enter a custom category name', 'error');
         return;
     }
 
@@ -692,4 +710,59 @@ function showSuccessNotificationWithItem(item) {
 
 function navigateHome() {
     window.location.href = 'index.html';
+}
+
+// ============================================
+// CUSTOM CATEGORY HANDLING
+// ============================================
+
+// List of predefined categories
+const PREDEFINED_CATEGORIES = [
+    'curry', 'biryani', 'rice', 'south-indian', 'dosa', 'idli', 'vada', 'uttapam',
+    'bread', 'snacks', 'breakfast', 'lunch', 'dinner', 'beverages', 'juice', 
+    'tea-coffee', 'desserts', 'fast-food'
+];
+
+function handleCategoryChange(selectEl) {
+    const customWrapper = document.getElementById('customCategoryWrapper');
+    const customInput = document.getElementById('customCategory');
+    
+    if (selectEl.value === 'other') {
+        customWrapper.style.display = 'block';
+        customInput.required = true;
+        customInput.focus();
+    } else {
+        customWrapper.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+    }
+}
+
+function getSelectedCategory() {
+    const selectEl = document.getElementById('itemCategory');
+    const customInput = document.getElementById('customCategory');
+    
+    if (selectEl.value === 'other') {
+        const customValue = customInput.value.trim().toLowerCase().replace(/\s+/g, '-');
+        return customValue || 'other';
+    }
+    return selectEl.value;
+}
+
+function setItemCategory(category) {
+    const selectEl = document.getElementById('itemCategory');
+    const customWrapper = document.getElementById('customCategoryWrapper');
+    const customInput = document.getElementById('customCategory');
+    
+    // Check if it's a predefined category
+    if (PREDEFINED_CATEGORIES.includes(category)) {
+        selectEl.value = category;
+        customWrapper.style.display = 'none';
+        customInput.value = '';
+    } else {
+        // Custom category
+        selectEl.value = 'other';
+        customWrapper.style.display = 'block';
+        customInput.value = category.replace(/-/g, ' ');
+    }
 }

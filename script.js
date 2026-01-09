@@ -49,6 +49,7 @@ function loadMenuFromStorage() {
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadMenuFromStorage();
+    renderCategoryFilters(); // Render dynamic category filters
     renderMenu();
     setupEventListeners();
     setupStorageSync();
@@ -61,6 +62,7 @@ function setupStorageSync() {
         if (e.key === STORAGE_KEY) {
             console.log('[AFC] Storage change detected - syncing...');
             loadMenuFromStorage();
+            renderCategoryFilters(); // Update category filters
             renderMenu();
             showToast('Menu updated!', 'success');
         }
@@ -75,8 +77,8 @@ function setupStorageSync() {
                 if (JSON.stringify(newMenu) !== JSON.stringify(menuData)) {
                     console.log('[AFC] Menu change detected via polling');
                     menuData = newMenu;
+                    renderCategoryFilters(); // Update category filters
                     renderMenu();
-                    updateCategoryCounts();
                 }
             } catch (e) {
                 console.error('[AFC] Polling error:', e);
@@ -87,6 +89,7 @@ function setupStorageSync() {
 
 function refreshMenu() {
     loadMenuFromStorage();
+    renderCategoryFilters(); // Update category filters
     renderMenu();
     showToast('Menu refreshed!', 'success');
 }
@@ -179,19 +182,82 @@ function filterCategory(category, clickedBtn = null) {
     renderMenu();
 }
 
-function updateCategoryCounts() {
-    const counts = {
-        all: menuData.length,
-        curry: menuData.filter(i => i.category === 'curry').length,
-        biryani: menuData.filter(i => i.category === 'biryani').length,
-        bread: menuData.filter(i => i.category === 'bread').length,
-        beverages: menuData.filter(i => i.category === 'beverages').length
-    };
+// Category emoji mapping for known categories
+const CATEGORY_EMOJIS = {
+    'all': '🍽️',
+    'curry': '🍛',
+    'biryani': '🍚',
+    'rice': '🍚',
+    'south-indian': '🌿',
+    'dosa': '🥞',
+    'idli': '⚪',
+    'vada': '🍩',
+    'uttapam': '🫓',
+    'bread': '🍞',
+    'snacks': '🍟',
+    'breakfast': '🌅',
+    'lunch': '☀️',
+    'dinner': '🌙',
+    'beverages': '🥤',
+    'juice': '🧃',
+    'tea-coffee': '☕',
+    'desserts': '🍰',
+    'fast-food': '🍔'
+};
+
+function getCategoryEmoji(category) {
+    return CATEGORY_EMOJIS[category] || '🍽️';
+}
+
+function formatCategoryName(category) {
+    return category
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+function renderCategoryFilters() {
+    const container = document.querySelector('.categories-modern');
+    if (!container) return;
     
-    Object.keys(counts).forEach(key => {
-        const el = document.getElementById(`count${key.charAt(0).toUpperCase() + key.slice(1)}`);
-        if (el) el.textContent = counts[key];
+    // Get unique categories from menu data
+    const uniqueCategories = [...new Set(menuData.map(item => item.category))];
+    
+    // Build category counts
+    const counts = { all: menuData.length };
+    uniqueCategories.forEach(cat => {
+        counts[cat] = menuData.filter(i => i.category === cat).length;
     });
+    
+    // Generate HTML for category pills
+    let html = `
+        <button class="category-pill ${currentFilter === 'all' ? 'active' : ''}" onclick="filterCategory('all', this)" data-category="all">
+            <span class="pill-icon">🍽️</span>
+            <span class="pill-text">All Items</span>
+            <span class="pill-count">${counts.all}</span>
+        </button>
+    `;
+    
+    uniqueCategories.forEach(category => {
+        const emoji = getCategoryEmoji(category);
+        const name = formatCategoryName(category);
+        const isActive = currentFilter === category ? 'active' : '';
+        
+        html += `
+            <button class="category-pill ${isActive}" onclick="filterCategory('${category}', this)" data-category="${category}">
+                <span class="pill-icon">${emoji}</span>
+                <span class="pill-text">${name}</span>
+                <span class="pill-count">${counts[category]}</span>
+            </button>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function updateCategoryCounts() {
+    // Re-render category filters to update counts dynamically
+    renderCategoryFilters();
 }
 
 function updateMenuItemCount() {

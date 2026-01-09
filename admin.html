@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AFC - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=2026.1">
+    <link rel="stylesheet" href="styles.css?v=2026.2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="admin-body">
@@ -229,13 +229,44 @@
                         </div>
                         <div class="form-group-new">
                             <label>Category *</label>
-                            <select id="itemCategory" required>
+                            <select id="itemCategory" required onchange="handleCategoryChange(this)">
                                 <option value="">Select Category</option>
-                                <option value="curry">🍛 Curry</option>
-                                <option value="biryani">🍚 Biryani</option>
-                                <option value="bread">🍞 Bread</option>
-                                <option value="beverages">🥤 Beverages</option>
+                                <optgroup label="Main Courses">
+                                    <option value="curry">🍛 Curry</option>
+                                    <option value="biryani">🍚 Biryani</option>
+                                    <option value="rice">🍚 Rice Items</option>
+                                </optgroup>
+                                <optgroup label="South Indian">
+                                    <option value="south-indian">🌿 South Indian</option>
+                                    <option value="dosa">🥞 Dosa</option>
+                                    <option value="idli">⚪ Idli</option>
+                                    <option value="vada">🍩 Vada</option>
+                                    <option value="uttapam">🫓 Uttapam</option>
+                                </optgroup>
+                                <optgroup label="Breads & Sides">
+                                    <option value="bread">🍞 Bread</option>
+                                    <option value="snacks">🍟 Snacks</option>
+                                </optgroup>
+                                <optgroup label="Meal Times">
+                                    <option value="breakfast">🌅 Breakfast</option>
+                                    <option value="lunch">☀️ Lunch</option>
+                                    <option value="dinner">🌙 Dinner</option>
+                                </optgroup>
+                                <optgroup label="Beverages">
+                                    <option value="beverages">🥤 Beverages</option>
+                                    <option value="juice">🧃 Juice</option>
+                                    <option value="tea-coffee">☕ Tea & Coffee</option>
+                                </optgroup>
+                                <optgroup label="Other">
+                                    <option value="desserts">🍰 Desserts</option>
+                                    <option value="fast-food">🍔 Fast Food</option>
+                                    <option value="other">➕ Other (Custom)</option>
+                                </optgroup>
                             </select>
+                            <div id="customCategoryWrapper" class="custom-category-wrapper" style="display: none;">
+                                <input type="text" id="customCategory" placeholder="Enter custom category name" maxlength="30">
+                                <small>Custom category will be saved with this item</small>
+                            </div>
                         </div>
                         <div class="form-group-new">
                             <label>Price (₹) *</label>
@@ -298,7 +329,7 @@
         </div>
     </div>
 
-    <script src="admin.js?v=2026.1"></script>
+    <script src="admin.js?v=2026.2"></script>
     <script>
         // Update current time
         function updateTime() {

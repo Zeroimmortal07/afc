@@ -1279,6 +1279,84 @@ body {
     color: #059669;
 }
 
+/* New Category Badges */
+.badge-rice {
+    background: #FEF3C7;
+    color: #B45309;
+}
+
+.badge-south-indian {
+    background: #DCFCE7;
+    color: #16A34A;
+}
+
+.badge-dosa {
+    background: #FEF9C3;
+    color: #A16207;
+}
+
+.badge-idli {
+    background: #F3E8FF;
+    color: #7C3AED;
+}
+
+.badge-vada {
+    background: #FFEDD5;
+    color: #C2410C;
+}
+
+.badge-uttapam {
+    background: #FCE7F3;
+    color: #BE185D;
+}
+
+.badge-snacks {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.badge-breakfast {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.badge-lunch {
+    background: #DBEAFE;
+    color: #2563EB;
+}
+
+.badge-dinner {
+    background: #EDE9FE;
+    color: #7C3AED;
+}
+
+.badge-juice {
+    background: #FFEDD5;
+    color: #EA580C;
+}
+
+.badge-tea-coffee {
+    background: #FED7AA;
+    color: #9A3412;
+}
+
+.badge-desserts {
+    background: #FCE7F3;
+    color: #DB2777;
+}
+
+.badge-fast-food {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+/* Default badge for custom/other categories */
+.badge-other,
+.badge-custom {
+    background: #E5E7EB;
+    color: #374151;
+}
+
 .badge-pending {
     background: #FEF3C7;
     color: #D97706;
@@ -1445,6 +1523,64 @@ body {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+/* Custom Category Input */
+.custom-category-wrapper {
+    margin-top: 12px;
+    padding: 14px;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(236, 72, 153, 0.05));
+    border: 2px dashed var(--primary-color);
+    border-radius: 10px;
+    animation: fadeSlideIn 0.3s ease;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-category-wrapper input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.custom-category-wrapper input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.custom-category-wrapper small {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+/* Select optgroup styling */
+.form-group-new select optgroup {
+    font-weight: 600;
+    color: var(--text-dark);
+    background: #f8f9fa;
+    padding: 8px 0;
+}
+
+.form-group-new select option {
+    padding: 8px 12px;
+    font-weight: 400;
 }
 
 .image-upload-new {
