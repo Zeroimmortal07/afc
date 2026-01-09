@@ -30,6 +30,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadMenuData();
     loadOrdersData();
     updateStats();
+    updateStorageIndicator();
     renderMenu();
     renderOrders();
     setupImageUploadDragDrop();
@@ -85,13 +86,59 @@ function loadOrdersData() {
 }
 
 function saveMenuData() {
-    localStorage.setItem(STORAGE_KEYS.MENU, JSON.stringify(adminState.menuData));
-    // Trigger storage event for other tabs/windows
-    window.dispatchEvent(new StorageEvent('storage', {
-        key: STORAGE_KEYS.MENU,
-        newValue: JSON.stringify(adminState.menuData),
-        storageArea: localStorage
-    }));
+    try {
+        const dataString = JSON.stringify(adminState.menuData);
+        localStorage.setItem(STORAGE_KEYS.MENU, dataString);
+        
+        // Trigger storage event for other tabs/windows
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: STORAGE_KEYS.MENU,
+            newValue: dataString,
+            storageArea: localStorage
+        }));
+        
+        // Log storage usage for debugging
+        const storageUsed = new Blob([dataString]).size;
+        console.log(`[AFC] Menu data saved: ${(storageUsed / 1024).toFixed(2)} KB`);
+        
+        return true;
+    } catch (e) {
+        console.error('[AFC] Error saving menu data:', e);
+        
+        // Check if it's a quota exceeded error
+        if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+            showNotification('❌ Storage full! Try removing images or deleting old items.', 'error');
+            
+            // Offer to save without images as fallback
+            const saveWithoutImages = confirm(
+                'Storage is full! Would you like to save items without images?\n\n' +
+                'This will remove all images but keep your menu items.'
+            );
+            
+            if (saveWithoutImages) {
+                // Strip images from all items
+                const itemsWithoutImages = adminState.menuData.map(item => ({
+                    ...item,
+                    image: null
+                }));
+                
+                try {
+                    localStorage.setItem(STORAGE_KEYS.MENU, JSON.stringify(itemsWithoutImages));
+                    adminState.menuData = itemsWithoutImages;
+                    showNotification('✓ Menu saved without images', 'success');
+                    renderMenu();
+                    return true;
+                } catch (e2) {
+                    showNotification('❌ Still unable to save. Please delete some items.', 'error');
+                    return false;
+                }
+            }
+        } else {
+            showNotification('❌ Error saving menu data', 'error');
+        }
+        
+        return false;
+    }
 }
 
 function saveOrdersData() {
@@ -233,9 +280,58 @@ function refreshDashboard() {
     loadMenuData();
     loadOrdersData();
     updateStats();
+    updateStorageIndicator();
     renderMenu();
     renderOrders();
     showNotification('Dashboard refreshed!', 'success');
+}
+
+/**
+ * Calculate and display localStorage usage
+ * localStorage typically has a 5MB limit per domain
+ */
+function updateStorageIndicator() {
+    const MAX_STORAGE = 5 * 1024 * 1024; // 5MB in bytes
+    
+    let totalSize = 0;
+    
+    // Calculate total localStorage usage
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            const itemSize = (localStorage[key].length + key.length) * 2; // UTF-16 = 2 bytes per char
+            totalSize += itemSize;
+        }
+    }
+    
+    const usedPercent = Math.min((totalSize / MAX_STORAGE) * 100, 100);
+    const usedMB = (totalSize / (1024 * 1024)).toFixed(2);
+    const maxMB = (MAX_STORAGE / (1024 * 1024)).toFixed(0);
+    
+    // Update display
+    const storageUsedEl = document.getElementById('storageUsed');
+    const storageBarEl = document.getElementById('storageBar');
+    
+    if (storageUsedEl) {
+        storageUsedEl.textContent = `${usedPercent.toFixed(0)}%`;
+        storageUsedEl.title = `${usedMB}MB / ${maxMB}MB used`;
+    }
+    
+    if (storageBarEl) {
+        storageBarEl.style.width = `${usedPercent}%`;
+        
+        // Add warning/critical classes based on usage
+        storageBarEl.classList.remove('warning', 'critical');
+        if (usedPercent >= 90) {
+            storageBarEl.classList.add('critical');
+        } else if (usedPercent >= 70) {
+            storageBarEl.classList.add('warning');
+        }
+    }
+    
+    // Log storage breakdown for debugging
+    console.log(`[AFC Storage] Total: ${usedMB}MB / ${maxMB}MB (${usedPercent.toFixed(1)}%)`);
+    
+    return { totalSize, usedPercent, usedMB };
 }
 
 // ============================================
@@ -390,10 +486,13 @@ function saveItem() {
         showSuccessNotificationWithItem(newItem);
     }
 
-    saveMenuData();
-    renderMenu();
-    updateStats();
-    closeItemModal();
+    const saved = saveMenuData();
+    if (saved) {
+        renderMenu();
+        updateStats();
+        updateStorageIndicator();
+        closeItemModal();
+    }
 }
 
 function deleteItem(itemId) {
@@ -405,6 +504,7 @@ function deleteItem(itemId) {
         saveMenuData();
         renderMenu();
         updateStats();
+        updateStorageIndicator();
         showNotification(`${item.name} deleted`, 'success');
     }
 }
@@ -466,7 +566,7 @@ function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file size (5MB max)
+    // Validate file size (5MB max for upload, will be compressed)
     if (file.size > 5 * 1024 * 1024) {
         showNotification('❌ Image must be less than 5MB', 'error');
         event.target.value = '';
@@ -480,21 +580,78 @@ function handleImageUpload(event) {
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        adminState.currentItemImage = e.target.result;
+    // Compress the image before storing
+    compressImage(file, 400, 0.7).then(compressedDataUrl => {
+        adminState.currentItemImage = compressedDataUrl;
         const previewDiv = document.getElementById('imagePreview');
+        
+        // Calculate size reduction
+        const originalSize = file.size;
+        const compressedSize = new Blob([compressedDataUrl]).size;
+        const reduction = Math.round((1 - compressedSize / originalSize) * 100);
+        
         previewDiv.innerHTML = `
-            <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
-            <p style="margin-top: 10px; color: #10B981; font-size: 13px;">✓ Image selected</p>
+            <img src="${compressedDataUrl}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+            <p style="margin-top: 10px; color: #10B981; font-size: 13px;">
+                ✓ Image compressed (${reduction > 0 ? reduction + '% smaller' : 'optimized'})
+            </p>
         `;
-        showNotification('✓ Image uploaded successfully', 'success');
-    };
-    reader.onerror = () => {
-        showNotification('❌ Error reading file', 'error');
-        event.target.value = '';
-    };
-    reader.readAsDataURL(file);
+        showNotification('✓ Image uploaded & compressed', 'success');
+    }).catch(err => {
+        console.error('Image compression error:', err);
+        // Fallback to uncompressed if compression fails
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            adminState.currentItemImage = e.target.result;
+            const previewDiv = document.getElementById('imagePreview');
+            previewDiv.innerHTML = `
+                <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                <p style="margin-top: 10px; color: #10B981; font-size: 13px;">✓ Image selected</p>
+            `;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+/**
+ * Compress an image file to reduce storage size
+ * @param {File} file - The image file to compress
+ * @param {number} maxWidth - Maximum width in pixels
+ * @param {number} quality - JPEG quality (0-1)
+ * @returns {Promise<string>} - Compressed image as data URL
+ */
+function compressImage(file, maxWidth = 400, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Calculate new dimensions
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to JPEG for better compression
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve(compressedDataUrl);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 // ============================================
