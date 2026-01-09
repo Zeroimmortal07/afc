@@ -32,6 +32,7 @@ window.addEventListener('DOMContentLoaded', () => {
     updateStats();
     renderMenu();
     renderOrders();
+    setupImageUploadDragDrop();
 });
 
 // ============================================
@@ -388,29 +389,77 @@ function closeItemModal() {
 // IMAGE UPLOAD
 // ============================================
 
+function setupImageUploadDragDrop() {
+    const uploadArea = document.querySelector('.image-upload-new');
+    if (!uploadArea) return;
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.add('drag-over');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.remove('drag-over');
+        }, false);
+    });
+
+    // Handle dropped files
+    uploadArea.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        const fileInput = document.getElementById('itemImage');
+        fileInput.files = files;
+        
+        // Trigger change event
+        const event = new Event('change', { bubbles: true });
+        fileInput.dispatchEvent(event);
+    }, false);
+}
+
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-        showNotification('Image must be less than 5MB', 'error');
+        showNotification('❌ Image must be less than 5MB', 'error');
+        event.target.value = '';
         return;
     }
 
     // Validate file type
     if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-        showNotification('Only JPG, PNG, GIF, and WebP images allowed', 'error');
+        showNotification('❌ Only JPG, PNG, GIF, and WebP images allowed', 'error');
+        event.target.value = '';
         return;
     }
 
     const reader = new FileReader();
     reader.onload = (e) => {
         adminState.currentItemImage = e.target.result;
-        document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        const previewDiv = document.getElementById('imagePreview');
+        previewDiv.innerHTML = `
+            <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+            <p style="margin-top: 10px; color: #10B981; font-size: 13px;">✓ Image selected</p>
+        `;
+        showNotification('✓ Image uploaded successfully', 'success');
     };
     reader.onerror = () => {
-        showNotification('Error reading file', 'error');
+        showNotification('❌ Error reading file', 'error');
+        event.target.value = '';
     };
     reader.readAsDataURL(file);
 }
