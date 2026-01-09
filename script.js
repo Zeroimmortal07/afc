@@ -31,12 +31,27 @@ function loadMenuFromStorage() {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         console.log('[AFC] Loading from localStorage:', stored ? 'Found data' : 'No data');
+        
         if (stored) {
-            menuData = JSON.parse(stored);
-            console.log('[AFC] Loaded menu items:', menuData.length, 'items');
+            const parsed = JSON.parse(stored);
+            // Validate that it's an array
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                menuData = parsed;
+                console.log('[AFC] Loaded menu items:', menuData.length, 'items');
+            } else {
+                console.warn('[AFC] Stored data is empty or invalid, using defaults');
+                menuData = [...DEFAULT_MENU_DATA];
+            }
         } else {
             menuData = [...DEFAULT_MENU_DATA];
-            console.log('[AFC] Using default menu:', menuData.length, 'items');
+            console.log('[AFC] No stored data, using default menu:', menuData.length, 'items');
+            // Save defaults so they're available for admin page
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(menuData));
+                console.log('[AFC] Saved default menu to localStorage');
+            } catch (saveError) {
+                console.warn('[AFC] Could not save default menu:', saveError);
+            }
         }
     } catch (e) {
         console.error('[AFC] Error loading menu from storage:', e);
@@ -99,7 +114,12 @@ function renderMenu() {
     const menuGrid = document.getElementById('menuGrid');
     const emptyState = document.getElementById('emptyState');
     
-    if (!menuGrid) return;
+    if (!menuGrid) {
+        console.error('[AFC] menuGrid element not found!');
+        return;
+    }
+    
+    console.log('[AFC] renderMenu() called, items:', menuData.length);
     
     // Apply filters
     let filtered = menuData;
@@ -110,11 +130,13 @@ function renderMenu() {
     
     if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
-        filtered = filtered.filter(item => 
-            item.name.toLowerCase().includes(query) ||
-            item.description.toLowerCase().includes(query) ||
-            item.category.toLowerCase().includes(query)
-        );
+        filtered = filtered.filter(item => {
+            // Defensive null checks
+            const name = (item.name || '').toLowerCase();
+            const description = (item.description || '').toLowerCase();
+            const category = (item.category || '').toLowerCase();
+            return name.includes(query) || description.includes(query) || category.includes(query);
+        });
     }
     
     // Handle empty state
@@ -128,38 +150,44 @@ function renderMenu() {
     
     // Render menu cards
     menuGrid.innerHTML = filtered.map(item => {
-        const cartItem = cart.find(c => c.id === item.id);
-        const inCart = cartItem ? cartItem.quantity : 0;
-        
-        const imageHTML = item.image 
-            ? `<img src="${item.image}" alt="${item.name}" class="menu-card-image" loading="lazy">`
-            : `<div class="menu-card-emoji">${item.emoji}</div>`;
-        
-        return `
-            <article class="menu-card" data-id="${item.id}">
-                <div class="menu-card-visual">
-                    ${imageHTML}
-                    <span class="menu-card-category">${item.category}</span>
-                    ${inCart > 0 ? `<span class="menu-card-in-cart">${inCart} in cart</span>` : ''}
-                </div>
-                <div class="menu-card-content">
-                    <h3 class="menu-card-title">${item.name}</h3>
-                    <p class="menu-card-description">${item.description}</p>
-                    <div class="menu-card-footer">
-                        <div class="menu-card-price">
-                            <span class="price-currency">₹</span>
-                            <span class="price-amount">${item.price}</span>
-                        </div>
-                        <button class="btn-add-to-cart" onclick="addToCart(${item.id})">
-                            <i class="fas fa-plus"></i>
-                            <span>Add</span>
-                        </button>
+        try {
+            const cartItem = cart.find(c => c.id === item.id);
+            const inCart = cartItem ? cartItem.quantity : 0;
+            
+            const imageHTML = item.image 
+                ? `<img src="${item.image}" alt="${item.name || 'Item'}" class="menu-card-image" loading="lazy">`
+                : `<div class="menu-card-emoji">${item.emoji || '🍽️'}</div>`;
+            
+            return `
+                <article class="menu-card" data-id="${item.id}">
+                    <div class="menu-card-visual">
+                        ${imageHTML}
+                        <span class="menu-card-category">${item.category || 'Other'}</span>
+                        ${inCart > 0 ? `<span class="menu-card-in-cart">${inCart} in cart</span>` : ''}
                     </div>
-                </div>
-            </article>
-        `;
+                    <div class="menu-card-content">
+                        <h3 class="menu-card-title">${item.name || 'Unnamed Item'}</h3>
+                        <p class="menu-card-description">${item.description || ''}</p>
+                        <div class="menu-card-footer">
+                            <div class="menu-card-price">
+                                <span class="price-currency">₹</span>
+                                <span class="price-amount">${item.price || 0}</span>
+                            </div>
+                            <button class="btn-add-to-cart" onclick="addToCart(${item.id})">
+                                <i class="fas fa-plus"></i>
+                                <span>Add</span>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            `;
+        } catch (e) {
+            console.error('[AFC] Error rendering item:', item, e);
+            return '';
+        }
     }).join('');
     
+    console.log('[AFC] Rendered', filtered.length, 'items');
     updateMenuItemCount();
 }
 

@@ -67,11 +67,21 @@ function logout() {
 function loadMenuData() {
     try {
         const stored = localStorage.getItem(STORAGE_KEYS.MENU);
-        adminState.menuData = stored ? JSON.parse(stored) : getDefaultMenu();
-        saveMenuData();
+        console.log('[AFC Admin] Loading menu data:', stored ? 'Found' : 'Not found');
+        
+        if (stored) {
+            adminState.menuData = JSON.parse(stored);
+            console.log('[AFC Admin] Loaded', adminState.menuData.length, 'items from storage');
+        } else {
+            adminState.menuData = getDefaultMenu();
+            console.log('[AFC Admin] Using default menu:', adminState.menuData.length, 'items');
+            // Save default menu to localStorage so home page can access it
+            saveMenuData();
+        }
     } catch (e) {
-        console.error('Error loading menu:', e);
+        console.error('[AFC Admin] Error loading menu:', e);
         adminState.menuData = getDefaultMenu();
+        saveMenuData();
     }
 }
 
@@ -339,8 +349,15 @@ function updateStorageIndicator() {
 // ============================================
 
 function renderMenu() {
+    console.log('[AFC Admin] renderMenu() called, items:', adminState.menuData.length);
+    
     const tbody = document.getElementById('itemsTableBody');
     const noData = document.getElementById('noItems');
+
+    if (!tbody) {
+        console.error('[AFC Admin] itemsTableBody not found!');
+        return;
+    }
 
     // Update item count display
     const itemCountEl = document.getElementById('itemCount');
@@ -351,49 +368,59 @@ function renderMenu() {
     if (adminState.menuData.length === 0) {
         tbody.innerHTML = '';
         if (noData) noData.style.display = 'block';
+        console.log('[AFC Admin] No items to display');
         return;
     }
 
     if (noData) noData.style.display = 'none';
     tbody.innerHTML = '';
 
-    adminState.menuData.forEach(item => {
-        const imageHTML = item.image
-            ? `<img src="${item.image}" alt="${item.name}" class="table-item-image">`
-            : `<span class="item-emoji">${item.emoji}</span>`;
+    adminState.menuData.forEach((item, index) => {
+        try {
+            const imageHTML = item.image
+                ? `<img src="${item.image}" alt="${item.name || 'Item'}" class="table-item-image">`
+                : `<span class="item-emoji">${item.emoji || '🍽️'}</span>`;
 
-        // Format category display name
-        const categoryDisplay = item.category
-            .split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-        
-        // Use 'other' class for custom categories not in predefined list
-        const badgeClass = PREDEFINED_CATEGORIES.includes(item.category) ? item.category : 'other';
+            // Format category display name - with defensive null check
+            const category = item.category || 'other';
+            const categoryDisplay = category
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            
+            // Use 'other' class for custom categories not in predefined list
+            const badgeClass = (typeof PREDEFINED_CATEGORIES !== 'undefined' && PREDEFINED_CATEGORIES.includes(category)) 
+                ? category 
+                : 'other';
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${item.id}</td>
-            <td>
-                <div class="item-display">
-                    ${imageHTML}
-                    <span>${item.name}</span>
-                </div>
-            </td>
-            <td><span class="badge badge-${badgeClass}">${categoryDisplay}</span></td>
-            <td>₹${item.price}</td>
-            <td>${item.description}</td>
-            <td>
-                <button class="btn-action btn-edit" onclick="editItem(${item.id})" title="Edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-action btn-delete" onclick="deleteItem(${item.id})" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.id}</td>
+                <td>
+                    <div class="item-display">
+                        ${imageHTML}
+                        <span>${item.name || 'Unnamed Item'}</span>
+                    </div>
+                </td>
+                <td><span class="badge badge-${badgeClass}">${categoryDisplay}</span></td>
+                <td>₹${item.price || 0}</td>
+                <td>${item.description || ''}</td>
+                <td>
+                    <button class="btn-action btn-edit" onclick="editItem(${item.id})" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="deleteItem(${item.id})" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        } catch (e) {
+            console.error('[AFC Admin] Error rendering item', index, item, e);
+        }
     });
+    
+    console.log('[AFC Admin] Rendered', adminState.menuData.length, 'items to table');
 }
 
 function openAddItemModal() {
@@ -481,17 +508,28 @@ function saveItem() {
             image: adminState.currentItemImage || null
         };
         adminState.menuData.push(newItem);
+        console.log('[AFC Admin] New item added to memory:', newItem);
         
         // Show success notification with item preview
         showSuccessNotificationWithItem(newItem);
     }
 
+    // Try to save to localStorage
     const saved = saveMenuData();
-    if (saved) {
-        renderMenu();
-        updateStats();
-        updateStorageIndicator();
-        closeItemModal();
+    
+    // ALWAYS render the menu and close modal, even if save failed
+    // This ensures user sees the item in memory (will be lost on refresh if save failed)
+    renderMenu();
+    updateStats();
+    updateStorageIndicator();
+    closeItemModal();
+    
+    if (!saved) {
+        // Item is in memory but NOT saved - warn user
+        showNotification('⚠️ Item added but NOT saved! Storage may be full.', 'error');
+        console.error('[AFC Admin] Item added to memory but save to localStorage failed!');
+    } else {
+        console.log('[AFC Admin] Item saved successfully to localStorage');
     }
 }
 
