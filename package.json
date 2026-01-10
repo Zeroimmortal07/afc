@@ -1,0 +1,11 @@
+{
+  "name": "afc",
+  "version": "1.0.0",
+  "description": "AFC Static Website",
+  "scripts": {
+    "start": "echo 'Static site - no build required'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
