@@ -647,6 +647,11 @@ function setupEventListeners() {
     }
 }
 
+// In browser console on deployed site:
+console.log('Menu items:', AFC_MENU.getAll().length);
+console.log('Version:', AFC_MENU.getVersion());
+console.log('Items:', AFC_MENU.getAll().map(i => i.name));
+
 // ============================================
 // LEGACY SUPPORT
 // ============================================
