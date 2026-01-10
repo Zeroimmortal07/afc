@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFC - Consistency Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #00ff00;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff0000; }
+        .info { color: #00aaff; }
+        button {
+            background: #00ff00;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00dd00;
+        }
+        pre {
+            background: #000;
+            padding: 15px;
+            overflow-x: auto;
+            border: 1px solid #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 AFC Consistency Verification Tool</h1>
+    
+    <div class="test-section">
+        <h2>Device Info</h2>
+        <pre id="deviceInfo"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Menu Data Test</h2>
+        <button onclick="runMenuTest()">Run Menu Test</button>
+        <button onclick="clearStorage()">Clear Storage & Reload</button>
+        <pre id="menuTest"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Version Check</h2>
+        <pre id="versionCheck"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Storage Analysis</h2>
+        <button onclick="analyzeStorage()">Analyze Storage</button>
+        <pre id="storageAnalysis"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Quick Fix Commands</h2>
+        <pre>
+// Clear all storage and reload
+localStorage.clear();
+location.reload();
+
+// Check menu count
+console.log('Count:', AFC_MENU?.getAll()?.length);
+
+// Check version
+console.log('Version:', AFC_MENU?.getVersion());
+
+// Force reload menu
+AFC_MENU?.load();
+console.log('Reloaded:', AFC_MENU?.getAll()?.length);
+        </pre>
+    </div>
+
+    <script>
+        // Device Info
+        document.getElementById('deviceInfo').textContent = 
+            `User Agent: ${navigator.userAgent}\n` +
+            `Screen: ${window.screen.width}x${window.screen.height}\n` +
+            `Window: ${window.innerWidth}x${window.innerHeight}\n` +
+            `Device Pixel Ratio: ${window.devicePixelRatio}\n` +
+            `Touch Support: ${('ontouchstart' in window) ? 'Yes' : 'No'}\n` +
+            `Platform: ${navigator.platform}`;
+
+        // Menu Test
+        function runMenuTest() {
+            const output = document.getElementById('menuTest');
+            let results = [];
+
+            try {
+                // Check if AFC_MENU exists
+                if (typeof AFC_MENU === 'undefined') {
+                    results.push('❌ FAIL: AFC_MENU not loaded');
+                    results.push('   → Make sure you\'re on the main site, not this test page');
+                } else {
+                    results.push('✅ PASS: AFC_MENU loaded');
+
+                    // Check menu count
+                    const count = AFC_MENU.getAll().length;
+                    if (count === 12) {
+                        results.push(`✅ PASS: Menu has ${count} items (CORRECT)`);
+                    } else {
+                        results.push(`❌ FAIL: Menu has ${count} items (Expected 12)`);
+                    }
+
+                    // Check version
+                    const version = AFC_MENU.getVersion();
+                    if (version === '3.0.0') {
+                        results.push(`✅ PASS: Version is ${version} (CORRECT)`);
+                    } else {
+                        results.push(`❌ FAIL: Version is ${version} (Expected 3.0.0)`);
+                    }
+
+                    // List first 3 items
+                    const items = AFC_MENU.getAll().slice(0, 3);
+                    results.push(`\nℹ️  First 3 items:`);
+                    items.forEach((item, i) => {
+                        results.push(`   ${i+1}. ${item.name} - ₹${item.price}`);
+                    });
+                }
+            } catch (error) {
+                results.push(`❌ ERROR: ${error.message}`);
+            }
+
+            output.textContent = results.join('\n');
+        }
+
+        // Version Check
+        try {
+            const stored = localStorage.getItem('menuVersion');
+            const menuData = localStorage.getItem('menuItems');
+            
+            let versionInfo = [];
+            versionInfo.push(`Stored Version: ${stored || 'NOT SET'}`);
+            versionInfo.push(`Expected Version: 3.0.0`);
+            versionInfo.push(`Match: ${stored === '3.0.0' ? '✅ YES' : '❌ NO'}`);
+            versionInfo.push(`\nMenu Data: ${menuData ? 'EXISTS' : 'MISSING'}`);
+            
+            if (menuData) {
+                try {
+                    const parsed = JSON.parse(menuData);
+                    versionInfo.push(`Items in Storage: ${parsed.length}`);
+                } catch (e) {
+                    versionInfo.push(`Items in Storage: ERROR - ${e.message}`);
+                }
+            }
+
+            document.getElementById('versionCheck').textContent = versionInfo.join('\n');
+        } catch (error) {
+            document.getElementById('versionCheck').textContent = `ERROR: ${error.message}`;
+        }
+
+        // Storage Analysis
+        function analyzeStorage() {
+            const output = document.getElementById('storageAnalysis');
+            let analysis = [];
+
+            try {
+                let totalSize = 0;
+                let items = [];
+
+                for (let key in localStorage) {
+                    if (localStorage.hasOwnProperty(key)) {
+                        const value = localStorage.getItem(key);
+                        const size = new Blob([value]).size;
+                        totalSize += size;
+                        items.push({
+                            key,
+                            size,
+                            length: value.length
+                        });
+                    }
+                }
+
+                items.sort((a, b) => b.size - a.size);
+
+                analysis.push(`Total Storage Used: ${(totalSize / 1024).toFixed(2)} KB`);
+                analysis.push(`Total Keys: ${items.length}`);
+                analysis.push(`\nTop Storage Items:`);
+
+                items.slice(0, 5).forEach((item, i) => {
+                    analysis.push(`  ${i+1}. ${item.key}: ${(item.size / 1024).toFixed(2)} KB`);
+                });
+
+                analysis.push(`\nAFC Keys:`);
+                const afcKeys = items.filter(i => i.key.includes('menu') || i.key.includes('cart') || i.key.includes('order'));
+                afcKeys.forEach(item => {
+                    analysis.push(`  - ${item.key}: ${(item.size / 1024).toFixed(2)} KB`);
+                });
+
+            } catch (error) {
+                analysis.push(`ERROR: ${error.message}`);
+            }
+
+            output.textContent = analysis.join('\n');
+        }
+
+        // Clear Storage
+        function clearStorage() {
+            if (confirm('This will clear ALL localStorage and reload the page. Continue?')) {
+                localStorage.clear();
+                alert('Storage cleared! Page will reload...');
+                location.reload();
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (typeof AFC_MENU !== 'undefined') {
+                    runMenuTest();
+                    analyzeStorage();
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
