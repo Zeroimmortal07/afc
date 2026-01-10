@@ -138,19 +138,23 @@
         <section class="admin-content-section">
             <div class="container-lg">
                 <!-- Tab Navigation -->
-                <div class="admin-tabs-new" role="tablist">
-                    <button class="tab-btn-new active" onclick="switchTab('orders', event)" role="tab" aria-selected="true" aria-controls="ordersTab">
+                <div class="admin-tabs-new" role="tablist" aria-label="Admin sections">
+                    <button class="tab-btn-new active" id="ordersTab-btn" onclick="switchTab('orders', event)" role="tab" aria-selected="true" aria-controls="ordersTab">
                         <i class="fas fa-shopping-bag" aria-hidden="true"></i>
                         <span>Orders</span>
                     </button>
-                    <button class="tab-btn-new" onclick="switchTab('menu', event)" role="tab" aria-selected="false" aria-controls="menuTab">
+                    <button class="tab-btn-new" id="menuTab-btn" onclick="switchTab('menu', event)" role="tab" aria-selected="false" aria-controls="menuTab">
                         <i class="fas fa-utensils" aria-hidden="true"></i>
                         <span>Manage Menu</span>
                     </button>
-                    <button class="tab-btn-new" onclick="switchTab('promo', event)" role="tab" aria-selected="false" aria-controls="promoTab">
+                    <button class="tab-btn-new" id="promoTab-btn" onclick="switchTab('promo', event)" role="tab" aria-selected="false" aria-controls="promoTab">
                         <i class="fas fa-tags" aria-hidden="true"></i>
                         <span>Promo Codes</span>
-                    </button> role="tabpanel" aria-labelledby="ordersTab-btn">
+                    </button>
+                </div>
+
+                <!-- ORDERS TAB -->
+                <div class="admin-tab active" id="ordersTab" role="tabpanel" aria-labelledby="ordersTab-btn">
                     <div class="tab-header">
                         <div class="tab-title">
                             <h3><i class="fas fa-list" aria-hidden="true"></i> Customer Orders</h3>
@@ -162,33 +166,39 @@
                                 Export CSV
                             </button>
                         </div>
-                        <div class="tab-filters" role="group" aria-label="Filter orde">
-                            <h3><i class="fas fa-list"></i> Customer Orders</h3>
-                            <p id="orderCount">0 orders</p>
+                        <div class="tab-filters" role="group" aria-label="Filter orders by status">
+                            <button class="filter-badge active" onclick="filterOrders('all', event)">All</button>
+                            <button class="filter-badge" onclick="filterOrders('pending', event)">Pending</button>
+                            <button class="filter-badge" onclick="filterOrders('completed', event)">Completed</button>
                         </div>
-                        <div class="tab-filters">
-                            <button class="filter-badge active" on aria-hidden="true"></i> Date</th>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="admin-table-new">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-calendar" aria-hidden="true"></i> Date</th>
                                     <th><i class="fas fa-user" aria-hidden="true"></i> Customer</th>
                                     <th><i class="fas fa-phone" aria-hidden="true"></i> Contact</th>
                                     <th><i class="fas fa-boxes" aria-hidden="true"></i> Items</th>
                                     <th><i class="fas fa-tag" aria-hidden="true"></i> Amount</th>
                                     <th><i class="fas fa-info-circle" aria-hidden="true"></i> Status</th>
-                                    <th><i class="fas fa-cog" aria-hidden="true
-                        <table class="admin-table-new">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-calendar"></i> Date</th>
-                                    <th><i class="fas fa-user"></i> Customer</th>
-                                    <th><i class="fas fa-phone"></i> Contact</th>
-                                    <th><i class="fas fa-boxes"></i> Items</th>
-                                    <th><i class="fas fa-tag"></i> Amount</th>
-                                    <th><i class="fas fa-info-circle"></i> Status</th>
-                                    <th><i class="fas fa-cog"></i> Actions</th>
+                                    <th><i class="fas fa-cog" aria-hidden="true"></i> Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="ordersTableBody">
                                 <!-- Orders will be loaded here -->
-                            </tbody> role="tabpanel" aria-labelledby="menuTab-btn">
+                            </tbody>
+                        </table>
+                        <div class="no-data" id="noOrders" style="display: none;">
+                            <i class="fas fa-receipt" aria-hidden="true"></i>
+                            <p>No orders yet. Orders will appear here when customers place them.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MENU TAB -->
+                <div class="admin-tab" id="menuTab" role="tabpanel" aria-labelledby="menuTab-btn">
                     <div class="tab-header">
                         <div class="tab-title">
                             <h3><i class="fas fa-utensils" aria-hidden="true"></i> Menu Management</h3>
@@ -204,16 +214,6 @@
                                 <span>Add New Item</span>
                             </button>
                         </div>
-                <div class="admin-tab" id="menuTab">
-                    <div class="tab-header">
-                        <div class="tab-title">
-                            <h3><i class="fas fa-utensils"></i> Menu Management</h3>
-                            <p id="itemCount">0 items</p>
-                        </div>
-                        <button class="btn-add-item" onclick="openAddItemModal()">
-                            <i class="fas fa-plus"></i>
-                            <span>Add New Item</span>
-                        </button>
                     </div>
 
                     <div class="table-wrapper">
@@ -221,11 +221,11 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th><i class="fas fa-image"></i> Item</th>
-                                    <th><i class="fas fa-tag"></i> Category</th>
-                                    <th><i class="fas fa-rupee-sign"></i> Price</th>
-                                    <th><i class="fas fa-align-left"></i> Description</th>
-                                    <th><i class="fas fa-cog"></i> Actions</th>
+                                    <th><i class="fas fa-image" aria-hidden="true"></i> Item</th>
+                                    <th><i class="fas fa-tag" aria-hidden="true"></i> Category</th>
+                                    <th><i class="fas fa-rupee-sign" aria-hidden="true"></i> Price</th>
+                                    <th><i class="fas fa-align-left" aria-hidden="true"></i> Description</th>
+                                    <th><i class="fas fa-cog" aria-hidden="true"></i> Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="itemsTableBody">

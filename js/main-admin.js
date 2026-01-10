@@ -749,19 +749,35 @@ async function deletePromoCode(code) {
 // ============================================
 
 function switchTab(tabName, e) {
+    // Remove active state from all tabs and panels
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.classList.remove('active');
     });
     document.querySelectorAll('.tab-btn-new').forEach(btn => {
         btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
     });
 
-    const tab = document.getElementById(tabName + 'Tab');
-    if (tab) tab.classList.add('active');
+    // Activate the selected tab panel
+    const tabPanel = document.getElementById(tabName + 'Tab');
+    if (tabPanel) {
+        tabPanel.classList.add('active');
+    }
 
+    // Activate the clicked tab button
+    const tabBtn = document.getElementById(tabName + 'Tab-btn');
+    if (tabBtn) {
+        tabBtn.classList.add('active');
+        tabBtn.setAttribute('aria-selected', 'true');
+    }
+
+    // Alternative: use event target if provided
     if (e && e.target) {
         const btn = e.target.closest('.tab-btn-new');
-        if (btn) btn.classList.add('active');
+        if (btn) {
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+        }
     }
 }
 
