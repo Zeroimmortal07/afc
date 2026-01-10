@@ -2468,8 +2468,11 @@ body {
 
 .menu-grid-modern {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 28px;
+    /* Optimized for better desktop utilization - fits more items per row */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    /* Ensure all items are visible without artificial constraints */
+    min-height: auto;
 }
 
 /* Menu Card Modern */
@@ -3348,6 +3351,7 @@ body {
     }
     
     .menu-grid-modern {
+        /* Tablet: optimize for 2 columns */
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 20px;
     }
@@ -3382,7 +3386,9 @@ body {
         padding: 10px 16px;
     }
     
-    .menu-grid-modern {
+    .men/* Mobile: single column for consistent scrolling experience */
+        grid-template-columns: 1fr;
+        gap: 16px
         grid-template-columns: 1fr;
     }
     
