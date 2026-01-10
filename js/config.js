@@ -7,7 +7,7 @@
 const AFC_CONFIG = {
     // Application info
     APP_NAME: 'Amma Food Center (AFC)',
-    APP_VERSION: '2.0.0',
+    APP_VERSION: '3.0.0', // CONSISTENCY FIX - Unified data source
     
     // Storage keys
     STORAGE_KEYS: {

@@ -1,7 +1,7 @@
 /**
  * AFC Customer Page Main Script
  * Uses modular architecture for better maintainability
- * @version 2.0.0
+ * @version 3.0.0 - CONSISTENCY FIX
  */
 
 // ============================================
@@ -9,13 +9,18 @@
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[AFC] Initializing customer page...');
+    console.log('[AFC] Initializing customer page v3.0.0...');
+    console.log('[AFC] User Agent:', navigator.userAgent);
+    console.log('[AFC] Screen:', window.innerWidth, 'x', window.innerHeight);
     
     // Initialize theme
     AFC_UI.theme.init();
     
-    // Load menu data
+    // CRITICAL: Force fresh load to ensure consistency
     AFC_MENU.load();
+    const loadedItems = AFC_MENU.getAll();
+    console.log('[AFC] LOADED MENU ITEMS:', loadedItems.length, 'items');
+    console.log('[AFC] First 3 items:', loadedItems.slice(0, 3).map(i => i.name));
     
     // Setup sync
     AFC_MENU.setupSync(handleMenuUpdate);
@@ -28,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup event listeners
     setupEventListeners();
     
-    console.log('[AFC] Customer page initialized');
+    console.log('[AFC] Customer page initialized - menu count:', loadedItems.length);
 });
 
 // ============================================

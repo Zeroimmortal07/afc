@@ -12,9 +12,9 @@ const AFC_MENU = (function() {
     let _currentFilter = 'all';
     let _searchQuery = '';
     
-    // Menu version for cache invalidation
+    // Menu version for cache invalidation - BUMP THIS ON ANY DEFAULT_MENU CHANGE
     const MENU_VERSION_KEY = 'menuVersion';
-    const CURRENT_MENU_VERSION = '2.0.1'; // Increment when DEFAULT_MENU changes
+    const CURRENT_MENU_VERSION = '3.0.0'; // CRITICAL: Incremented to force reload
     
     /**
      * Check if stored menu version matches current version
@@ -32,50 +32,49 @@ const AFC_MENU = (function() {
     /**
      * Load menu from storage or defaults
      * Ensures consistency across all devices
+     * CRITICAL: Forces data consistency on version mismatch
      * @returns {Array} Menu data
      */
     function load() {
         try {
             const stored = localStorage.getItem(AFC_CONFIG.STORAGE_KEYS.MENU);
+            const versionValid = isMenuVersionValid();
             
-            // Check if menu version is current
-            if (stored && isMenuVersionValid()) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    _menuData = parsed;
-                    console.log('[AFC Menu] Loaded', _menuData.length, 'items from storage (v' + CURRENT_MENU_VERSION + ')');
-                    return _menuData;
-                }
-            } else if (stored && !isMenuVersionValid()) {
-                // Version mismatch - merge stored data with defaults
-                console.log('[AFC Menu] Version mismatch, merging with defaults...');
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed)) {
-                    // Keep user-added items but ensure all default items exist
-                    const defaultIds = AFC_CONFIG.DEFAULT_MENU.map(i => i.id);
-                    const userAddedItems = parsed.filter(item => !defaultIds.includes(item.id));
-                    
-                    // Combine: defaults + user-added items
-                    _menuData = [...AFC_CONFIG.DEFAULT_MENU, ...userAddedItems];
-                    console.log('[AFC Menu] Merged menu:', _menuData.length, 'items');
-                    
-                    // Save merged data with new version
-                    save();
-                    return _menuData;
-                }
+            console.log('[AFC Menu] Load check - stored:', !!stored, 'version:', versionValid);
+            
+            // CRITICAL FIX: Always use defaults on version mismatch or empty storage
+            if (!stored || !versionValid) {
+                console.log('[AFC Menu] FORCING default menu (12 items) - Version:', CURRENT_MENU_VERSION);
+                _menuData = [...AFC_CONFIG.DEFAULT_MENU];
+                
+                // Clear old data and save fresh defaults
+                localStorage.removeItem(AFC_CONFIG.STORAGE_KEYS.MENU);
+                save();
+                
+                return _menuData;
             }
+            
+            // Only use stored data if version matches
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                _menuData = parsed;
+                console.log('[AFC Menu] Loaded', _menuData.length, 'items from valid storage (v' + CURRENT_MENU_VERSION + ')');
+                return _menuData;
+            }
+            
+            // Fallback to defaults if parsing fails
+            throw new Error('Invalid stored data');
+            
         } catch (e) {
-            console.error('[AFC Menu] Error loading menu:', e);
+            console.error('[AFC Menu] Error loading, using defaults:', e);
+            _menuData = [...AFC_CONFIG.DEFAULT_MENU];
+            
+            // Force save to fix corrupted data
+            localStorage.removeItem(AFC_CONFIG.STORAGE_KEYS.MENU);
+            save();
+            
+            return _menuData;
         }
-        
-        // Use defaults for fresh installs
-        _menuData = [...AFC_CONFIG.DEFAULT_MENU];
-        console.log('[AFC Menu] Using default menu:', _menuData.length, 'items');
-        
-        // Save defaults with version
-        save();
-        
-        return _menuData;
     }
     
     /**
