@@ -12,19 +12,55 @@ const AFC_MENU = (function() {
     let _currentFilter = 'all';
     let _searchQuery = '';
     
+    // Menu version for cache invalidation
+    const MENU_VERSION_KEY = 'menuVersion';
+    const CURRENT_MENU_VERSION = '2.0.1'; // Increment when DEFAULT_MENU changes
+    
+    /**
+     * Check if stored menu version matches current version
+     * @returns {boolean} Version match
+     */
+    function isMenuVersionValid() {
+        try {
+            const storedVersion = localStorage.getItem(MENU_VERSION_KEY);
+            return storedVersion === CURRENT_MENU_VERSION;
+        } catch (e) {
+            return false;
+        }
+    }
+    
     /**
      * Load menu from storage or defaults
+     * Ensures consistency across all devices
      * @returns {Array} Menu data
      */
     function load() {
         try {
             const stored = localStorage.getItem(AFC_CONFIG.STORAGE_KEYS.MENU);
             
-            if (stored) {
+            // Check if menu version is current
+            if (stored && isMenuVersionValid()) {
                 const parsed = JSON.parse(stored);
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     _menuData = parsed;
-                    console.log('[AFC Menu] Loaded', _menuData.length, 'items from storage');
+                    console.log('[AFC Menu] Loaded', _menuData.length, 'items from storage (v' + CURRENT_MENU_VERSION + ')');
+                    return _menuData;
+                }
+            } else if (stored && !isMenuVersionValid()) {
+                // Version mismatch - merge stored data with defaults
+                console.log('[AFC Menu] Version mismatch, merging with defaults...');
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) {
+                    // Keep user-added items but ensure all default items exist
+                    const defaultIds = AFC_CONFIG.DEFAULT_MENU.map(i => i.id);
+                    const userAddedItems = parsed.filter(item => !defaultIds.includes(item.id));
+                    
+                    // Combine: defaults + user-added items
+                    _menuData = [...AFC_CONFIG.DEFAULT_MENU, ...userAddedItems];
+                    console.log('[AFC Menu] Merged menu:', _menuData.length, 'items');
+                    
+                    // Save merged data with new version
+                    save();
                     return _menuData;
                 }
             }
@@ -32,24 +68,27 @@ const AFC_MENU = (function() {
             console.error('[AFC Menu] Error loading menu:', e);
         }
         
-        // Use defaults
+        // Use defaults for fresh installs
         _menuData = [...AFC_CONFIG.DEFAULT_MENU];
         console.log('[AFC Menu] Using default menu:', _menuData.length, 'items');
         
-        // Save defaults
+        // Save defaults with version
         save();
         
         return _menuData;
     }
     
     /**
-     * Save menu to storage
+     * Save menu to storage with version tracking
      * @returns {boolean} Success
      */
     function save() {
         try {
             const dataString = JSON.stringify(_menuData);
             localStorage.setItem(AFC_CONFIG.STORAGE_KEYS.MENU, dataString);
+            
+            // Save menu version for consistency tracking
+            localStorage.setItem(MENU_VERSION_KEY, CURRENT_MENU_VERSION);
             
             // Dispatch sync events
             window.dispatchEvent(new CustomEvent('afc-menu-updated', {
@@ -65,6 +104,7 @@ const AFC_MENU = (function() {
                 const stripped = _menuData.map(item => ({ ...item, image: null }));
                 try {
                     localStorage.setItem(AFC_CONFIG.STORAGE_KEYS.MENU, JSON.stringify(stripped));
+                    localStorage.setItem(MENU_VERSION_KEY, CURRENT_MENU_VERSION);
                     _menuData = stripped;
                     return true;
                 } catch (e2) {
@@ -372,6 +412,26 @@ const AFC_MENU = (function() {
         };
     }
     
+    /**
+     * Force reset menu to defaults
+     * Useful for debugging cross-device sync issues
+     */
+    function resetToDefaults() {
+        _menuData = [...AFC_CONFIG.DEFAULT_MENU];
+        localStorage.removeItem(MENU_VERSION_KEY);
+        save();
+        console.log('[AFC Menu] Reset to defaults:', _menuData.length, 'items');
+        return _menuData;
+    }
+    
+    /**
+     * Get current menu version
+     * @returns {string} Version string
+     */
+    function getVersion() {
+        return CURRENT_MENU_VERSION;
+    }
+    
     // Public API
     return {
         load,
@@ -393,7 +453,9 @@ const AFC_MENU = (function() {
         formatCategoryName,
         setupSync,
         compressImage,
-        getStorageInfo
+        getStorageInfo,
+        resetToDefaults,
+        getVersion
     };
 })();
 
