@@ -72,18 +72,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Real-time sync with admin panel
 function setupStorageSync() {
-    // Listen for storage changes from admin panel
+    // Listen for storage changes from admin panel (cross-tab)
     window.addEventListener('storage', (e) => {
         if (e.key === STORAGE_KEY) {
-            console.log('[AFC] Storage change detected - syncing...');
-            loadMenuFromStorage();
-            renderCategoryFilters(); // Update category filters
+            console.log('[AFC] Storage change detected (cross-tab) - syncing...');
+            syncMenuFromStorage();
+        }
+    });
+    
+    // Listen for custom event from admin panel (same-tab sync)
+    window.addEventListener('afc-menu-updated', (e) => {
+        console.log('[AFC] Custom menu update event received - syncing...');
+        if (e.detail && e.detail.menuData) {
+            menuData = e.detail.menuData;
+            updateMenuItemCount();
+            updateCategoryCounts();
+            renderCategoryFilters();
             renderMenu();
             showToast('Menu updated!', 'success');
         }
     });
     
-    // Polling fallback for same-tab updates
+    // Polling fallback for edge cases (reduced frequency)
     setInterval(() => {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
@@ -91,15 +101,21 @@ function setupStorageSync() {
                 const newMenu = JSON.parse(stored);
                 if (JSON.stringify(newMenu) !== JSON.stringify(menuData)) {
                     console.log('[AFC] Menu change detected via polling');
-                    menuData = newMenu;
-                    renderCategoryFilters(); // Update category filters
-                    renderMenu();
+                    syncMenuFromStorage();
                 }
             } catch (e) {
                 console.error('[AFC] Polling error:', e);
             }
         }
-    }, 1500);
+    }, 2000);
+}
+
+// Helper function to sync menu from storage and update UI
+function syncMenuFromStorage() {
+    loadMenuFromStorage();
+    renderCategoryFilters();
+    renderMenu();
+    showToast('Menu updated!', 'success');
 }
 
 function refreshMenu() {

@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AFC - Premium Indian Food Delivery. Order authentic curries, biryanis, and more.">
+    <meta name="theme-color" content="#7C3AED">
     <title>AFC - Premium Food Delivery</title>
-    <link rel="stylesheet" href="styles.css?v=2026.4">
+    <link rel="stylesheet" href="styles.css?v=2026.5">
+    <link rel="stylesheet" href="enhanced.css?v=2026.5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="home-body">
+<body class="home-body has-mobile-nav">
+    <!-- Skip to main content for accessibility -->
+    <a href="#menuGrid" class="skip-link">Skip to menu</a>
     <!-- Modern Navigation Header -->
     <header class="header-modern">
         <div class="header-container">
@@ -36,13 +41,19 @@
 
             <div class="header-right">
                 <div class="header-actions">
-                    <button class="header-action-btn" onclick="refreshMenu()" title="Refresh Menu">
-                        <i class="fas fa-sync-alt"></i>
+                    <button class="header-action-btn theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode" id="themeToggle" aria-label="Toggle dark mode">
+                        <i class="fas fa-moon" aria-hidden="true"></i>
                     </button>
-                    <div class="cart-wrapper" onclick="openCart()">
+                    <button class="header-action-btn history-btn" onclick="openOrderHistory()" title="Order History" aria-label="View order history">
+                        <i class="fas fa-history" aria-hidden="true"></i>
+                    </button>
+                    <button class="header-action-btn" onclick="refreshMenu()" title="Refresh Menu" aria-label="Refresh menu">
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                    </button>
+                    <div class="cart-wrapper" onclick="openCart()" role="button" tabindex="0" aria-label="Open cart" onkeypress="if(event.key==='Enter')openCart()">
                         <div class="cart-icon-modern">
-                            <i class="fas fa-shopping-bag"></i>
-                            <span class="cart-badge" id="cartCount">0</span>
+                            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                            <span class="cart-badge" id="cartCount" aria-live="polite">0</span>
                         </div>
                         <div class="cart-info">
                             <span class="cart-label">Your Cart</span>
@@ -136,14 +147,14 @@
             </section>
 
             <!-- Menu Grid - Modern Cards -->
-            <section class="menu-section">
-                <div class="menu-grid-modern" id="menuGrid">
+            <section class="menu-section" aria-label="Menu items">
+                <div class="menu-grid-modern" id="menuGrid" role="list" aria-busy="true">
                     <!-- Menu items will be loaded here dynamically -->
                 </div>
                 
                 <!-- Empty State -->
-                <div class="empty-state" id="emptyState" style="display: none;">
-                    <div class="empty-icon">🔍</div>
+                <div class="empty-state" id="emptyState" style="display: none;" role="status">
+                    <div class="empty-icon" aria-hidden="true">🔍</div>
                     <h3>No items found</h3>
                     <p>Try adjusting your search or filter</p>
                     <button class="btn-reset" onclick="resetFilters()">Show All Items</button>
@@ -181,18 +192,25 @@
             </div>
             
             <div class="cart-panel-footer">
+                <div id="promoCodeSection" class="promo-section">
+                    <!-- Promo code input will be rendered here -->
+                </div>
                 <div class="cart-summary">
                     <div class="summary-row">
                         <span>Subtotal</span>
                         <span id="subtotal">₹0</span>
+                    </div>
+                    <div class="summary-row" id="discountRow" style="display: none;">
+                        <span>Discount</span>
+                        <span id="discountAmount">-₹0</span>
                     </div>
                     <div class="summary-row summary-total">
                         <span>Total</span>
                         <span id="cartTotal">₹0</span>
                     </div>
                 </div>
-                <button class="btn-checkout" onclick="proceedToCheckout()" id="checkoutBtn" disabled>
-                    <i class="fas fa-arrow-right"></i>
+                <button class="btn-checkout" onclick="proceedToCheckout()" id="checkoutBtn" disabled aria-label="Proceed to checkout">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
                     Proceed to Checkout
                 </button>
             </div>
@@ -281,7 +299,48 @@
     </div>
 
     <!-- Notification Toast -->
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container" id="toastContainer" aria-label="Notifications" aria-live="polite"></div>
+
+    <!-- Order History Modal -->
+    <div class="modal-overlay" id="orderHistoryModal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+        <div class="review-panel">
+            <div class="review-panel-header">
+                <div class="review-header-left">
+                    <i class="fas fa-history" aria-hidden="true"></i>
+                    <div>
+                        <h2 id="historyTitle">Order History</h2>
+                        <span>Your past orders</span>
+                    </div>
+                </div>
+                <button class="cart-close-btn" onclick="closeOrderHistory()" aria-label="Close order history">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="review-panel-body" id="orderHistoryList">
+                <!-- Order history will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+        <a href="#" class="mobile-nav-item active" aria-label="Home">
+            <i class="fas fa-home" aria-hidden="true"></i>
+            <span>Home</span>
+        </a>
+        <button class="mobile-nav-item" onclick="document.getElementById('searchInput').focus()" aria-label="Search">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <span>Search</span>
+        </button>
+        <button class="mobile-nav-item" onclick="openOrderHistory()" aria-label="Orders">
+            <i class="fas fa-receipt" aria-hidden="true"></i>
+            <span>Orders</span>
+        </button>
+        <button class="mobile-nav-item" onclick="openCart()" aria-label="Cart">
+            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+            <span>Cart</span>
+        </button>
+    </nav>
 
     <!-- Admin Footer - Modern -->
     <footer class="footer-modern">
@@ -308,6 +367,12 @@
         </div>
     </footer>
 
-    <script src="script.js?v=2026.4"></script>
+    <!-- Load modular scripts -->
+    <script src="js/config.js?v=2026.5"></script>
+    <script src="js/api.js?v=2026.5"></script>
+    <script src="js/ui.js?v=2026.5"></script>
+    <script src="js/cart.js?v=2026.5"></script>
+    <script src="js/menu.js?v=2026.5"></script>
+    <script src="js/main-customer.js?v=2026.5"></script>
 </body>
 </html>

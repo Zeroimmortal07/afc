@@ -100,12 +100,22 @@ function saveMenuData() {
         const dataString = JSON.stringify(adminState.menuData);
         localStorage.setItem(STORAGE_KEYS.MENU, dataString);
         
-        // Trigger storage event for other tabs/windows
-        window.dispatchEvent(new StorageEvent('storage', {
-            key: STORAGE_KEYS.MENU,
-            newValue: dataString,
-            storageArea: localStorage
+        // Trigger custom event for same-tab sync (storage event only works cross-tab)
+        window.dispatchEvent(new CustomEvent('afc-menu-updated', {
+            detail: { menuData: adminState.menuData }
         }));
+        
+        // Also trigger storage event for other tabs/windows
+        try {
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: STORAGE_KEYS.MENU,
+                newValue: dataString,
+                storageArea: localStorage
+            }));
+        } catch (storageEventError) {
+            // Some browsers don't support custom StorageEvent
+            console.log('[AFC] StorageEvent dispatch not supported, relying on custom event');
+        }
         
         // Log storage usage for debugging
         const storageUsed = new Blob([dataString]).size;
@@ -806,11 +816,12 @@ function viewOrderDetails(orderId) {
     document.getElementById('orderModal').classList.add('active');
 }
 
-function filterOrders(status) {
+function filterOrders(status, e) {
     adminState.currentFilter = status;
     document.querySelectorAll('.filter-badge').forEach(btn => btn.classList.remove('active'));
-    if (event && event.target) {
-        event.target.classList.add('active');
+    const evt = e || window.event;
+    if (evt && evt.target) {
+        evt.target.classList.add('active');
     }
     renderOrders();
 }
@@ -823,7 +834,7 @@ function closeOrderModal() {
 // TAB NAVIGATION
 // ============================================
 
-function switchTab(tabName) {
+function switchTab(tabName, e) {
     // Hide all tabs
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.classList.remove('active');
@@ -837,8 +848,9 @@ function switchTab(tabName) {
     if (tab) tab.classList.add('active');
 
     // Activate the clicked button
-    if (event && event.target) {
-        const btn = event.target.closest('.tab-btn-new');
+    const evt = e || window.event;
+    if (evt && evt.target) {
+        const btn = evt.target.closest('.tab-btn-new');
         if (btn) btn.classList.add('active');
     }
 }

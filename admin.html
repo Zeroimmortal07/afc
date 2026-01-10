@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>AFC - Admin Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=2026.4">
+    <link rel="stylesheet" href="styles.css?v=2026.5">
+    <link rel="stylesheet" href="enhanced.css?v=2026.5">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="admin-body">
@@ -31,16 +33,19 @@
             </div>
 
             <div class="admin-header-right">
-                <button class="header-btn" onclick="refreshDashboard()" title="Refresh Data">
-                    <i class="fas fa-sync-alt"></i>
+                <button class="header-btn theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode" id="themeToggle" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon" aria-hidden="true"></i>
+                </button>
+                <button class="header-btn" onclick="refreshDashboard()" title="Refresh Data" aria-label="Refresh dashboard">
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
                     <span>Refresh</span>
                 </button>
-                <button class="header-btn" onclick="navigateHome()" title="Go to Home">
-                    <i class="fas fa-home"></i>
+                <button class="header-btn" onclick="navigateHome()" title="Go to Home" aria-label="Go to home page">
+                    <i class="fas fa-home" aria-hidden="true"></i>
                     <span>Home</span>
                 </button>
-                <button class="header-btn header-btn-logout" onclick="logout()" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
+                <button class="header-btn header-btn-logout" onclick="logout()" title="Logout" aria-label="Logout">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     <span>Logout</span>
                 </button>
             </div>
@@ -133,32 +138,42 @@
         <section class="admin-content-section">
             <div class="container-lg">
                 <!-- Tab Navigation -->
-                <div class="admin-tabs-new">
-                    <button class="tab-btn-new active" onclick="switchTab('orders')">
-                        <i class="fas fa-shopping-bag"></i>
+                <div class="admin-tabs-new" role="tablist">
+                    <button class="tab-btn-new active" onclick="switchTab('orders', event)" role="tab" aria-selected="true" aria-controls="ordersTab">
+                        <i class="fas fa-shopping-bag" aria-hidden="true"></i>
                         <span>Orders</span>
                     </button>
-                    <button class="tab-btn-new" onclick="switchTab('menu')">
-                        <i class="fas fa-utensils"></i>
+                    <button class="tab-btn-new" onclick="switchTab('menu', event)" role="tab" aria-selected="false" aria-controls="menuTab">
+                        <i class="fas fa-utensils" aria-hidden="true"></i>
                         <span>Manage Menu</span>
                     </button>
-                </div>
-
-                <!-- ORDERS TAB -->
-                <div class="admin-tab active" id="ordersTab">
+                    <button class="tab-btn-new" onclick="switchTab('promo', event)" role="tab" aria-selected="false" aria-controls="promoTab">
+                        <i class="fas fa-tags" aria-hidden="true"></i>
+                        <span>Promo Codes</span>
+                    </button> role="tabpanel" aria-labelledby="ordersTab-btn">
                     <div class="tab-header">
                         <div class="tab-title">
+                            <h3><i class="fas fa-list" aria-hidden="true"></i> Customer Orders</h3>
+                            <p id="orderCount">0 orders</p>
+                        </div>
+                        <div class="tab-actions">
+                            <button class="export-btn" onclick="exportOrdersToCSV()" aria-label="Export orders to CSV">
+                                <i class="fas fa-download" aria-hidden="true"></i>
+                                Export CSV
+                            </button>
+                        </div>
+                        <div class="tab-filters" role="group" aria-label="Filter orde">
                             <h3><i class="fas fa-list"></i> Customer Orders</h3>
                             <p id="orderCount">0 orders</p>
                         </div>
                         <div class="tab-filters">
-                            <button class="filter-badge active" onclick="filterOrders('all')">All</button>
-                            <button class="filter-badge" onclick="filterOrders('pending')">Pending</button>
-                            <button class="filter-badge" onclick="filterOrders('completed')">Completed</button>
-                        </div>
-                    </div>
-
-                    <div class="table-wrapper">
+                            <button class="filter-badge active" on aria-hidden="true"></i> Date</th>
+                                    <th><i class="fas fa-user" aria-hidden="true"></i> Customer</th>
+                                    <th><i class="fas fa-phone" aria-hidden="true"></i> Contact</th>
+                                    <th><i class="fas fa-boxes" aria-hidden="true"></i> Items</th>
+                                    <th><i class="fas fa-tag" aria-hidden="true"></i> Amount</th>
+                                    <th><i class="fas fa-info-circle" aria-hidden="true"></i> Status</th>
+                                    <th><i class="fas fa-cog" aria-hidden="true
                         <table class="admin-table-new">
                             <thead>
                                 <tr>
@@ -173,16 +188,22 @@
                             </thead>
                             <tbody id="ordersTableBody">
                                 <!-- Orders will be loaded here -->
-                            </tbody>
-                        </table>
-                        <div class="no-data" id="noOrders">
-                            <i class="fas fa-inbox"></i>
-                            <p>No orders yet</p>
+                            </tbody> role="tabpanel" aria-labelledby="menuTab-btn">
+                    <div class="tab-header">
+                        <div class="tab-title">
+                            <h3><i class="fas fa-utensils" aria-hidden="true"></i> Menu Management</h3>
+                            <p id="itemCount">0 items</p>
                         </div>
-                    </div>
-                </div>
-
-                <!-- MENU TAB -->
+                        <div class="tab-actions">
+                            <button class="export-btn" onclick="exportMenuToCSV()" aria-label="Export menu to CSV">
+                                <i class="fas fa-download" aria-hidden="true"></i>
+                                Export CSV
+                            </button>
+                            <button class="btn-add-item" onclick="openAddItemModal()" aria-label="Add new menu item">
+                                <i class="fas fa-plus" aria-hidden="true"></i>
+                                <span>Add New Item</span>
+                            </button>
+                        </div>
                 <div class="admin-tab" id="menuTab">
                     <div class="tab-header">
                         <div class="tab-title">
@@ -210,12 +231,43 @@
                             <tbody id="itemsTableBody">
                                 <!-- Menu items will be loaded here -->
                             </tbody>
-                            </tbody>
                         </table>
                         <div class="no-data" id="noItems" style="display: none;">
-                            <i class="fas fa-box-open"></i>
+                            <i class="fas fa-box-open" aria-hidden="true"></i>
                             <p>No menu items. Click "Add New Item" to get started!</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- PROMO CODES TAB -->
+                <div class="admin-tab" id="promoTab" role="tabpanel" aria-labelledby="promoTab-btn">
+                    <div class="tab-header">
+                        <div class="tab-title">
+                            <h3><i class="fas fa-tags" aria-hidden="true"></i> Promo Codes</h3>
+                            <p>Manage discount codes</p>
+                        </div>
+                        <button class="btn-add-item" onclick="openPromoModal()" aria-label="Add new promo code">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                            <span>Add Promo Code</span>
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper promo-table-wrapper">
+                        <table class="admin-table-new promo-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Discount</th>
+                                    <th>Min Order</th>
+                                    <th>Usage</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="promoCodesTable">
+                                <!-- Promo codes will be loaded here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -323,12 +375,12 @@
     </div>
 
     <!-- Order Details Modal -->
-    <div class="modal-overlay" id="orderModal">
+    <div class="modal-overlay" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
         <div class="modal-new modal-large">
             <div class="modal-header-new">
-                <h2><i class="fas fa-receipt"></i> Order Details</h2>
-                <button class="modal-close" onclick="closeOrderModal()">
-                    <i class="fas fa-times"></i>
+                <h2 id="orderModalTitle"><i class="fas fa-receipt" aria-hidden="true"></i> Order Details</h2>
+                <button class="modal-close" onclick="closeOrderModal()" aria-label="Close">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="modal-body-new">
@@ -342,12 +394,92 @@
         </div>
     </div>
 
-    <script src="admin.js?v=2026.4"></script>
+    <!-- Promo Code Modal -->
+    <div class="modal-overlay" id="promoModal" role="dialog" aria-modal="true" aria-labelledby="promoModalTitle">
+        <div class="modal-new">
+            <div class="modal-header-new">
+                <h2 id="promoModalTitle"><i class="fas fa-tag" aria-hidden="true"></i> Add Promo Code</h2>
+                <button class="modal-close" onclick="closePromoModal()" aria-label="Close">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body-new">
+                <form id="promoForm" class="form-new">
+                    <div class="form-row">
+                        <div class="form-group-new">
+                            <label for="promoCode">Promo Code *</label>
+                            <input type="text" id="promoCode" required placeholder="e.g., WELCOME10" style="text-transform: uppercase;">
+                        </div>
+                        <div class="form-group-new">
+                            <label for="promoType">Discount Type *</label>
+                            <select id="promoType" required>
+                                <option value="percent">Percentage (%)</option>
+                                <option value="flat">Flat Amount (₹)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group-new">
+                            <label for="promoDiscount">Discount Value *</label>
+                            <input type="number" id="promoDiscount" required min="1" placeholder="10">
+                        </div>
+                        <div class="form-group-new">
+                            <label for="promoMinOrder">Minimum Order (₹)</label>
+                            <input type="number" id="promoMinOrder" min="0" placeholder="100" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group-new">
+                            <label for="promoMaxDiscount">Max Discount (₹)</label>
+                            <input type="number" id="promoMaxDiscount" min="0" placeholder="50">
+                            <small>Leave empty for no limit</small>
+                        </div>
+                        <div class="form-group-new">
+                            <label for="promoUsageLimit">Usage Limit</label>
+                            <input type="number" id="promoUsageLimit" min="1" placeholder="100">
+                            <small>Leave empty for unlimited</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer-new">
+                <button class="btn-cancel" onclick="closePromoModal()">Cancel</button>
+                <button class="btn-save" onclick="savePromoCode()">
+                    <i class="fas fa-save" aria-hidden="true"></i> Create Promo Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer" aria-label="Notifications" aria-live="polite"></div>
+
+    <!-- Load modular scripts -->
+    <script src="js/config.js?v=2026.5"></script>
+    <script src="js/api.js?v=2026.5"></script>
+    <script src="js/ui.js?v=2026.5"></script>
+    <script src="js/auth.js?v=2026.5"></script>
+    <script src="js/cart.js?v=2026.5"></script>
+    <script src="js/menu.js?v=2026.5"></script>
+    <script src="js/main-admin.js?v=2026.5"></script>
     <script>
-        // Update current time
+        // Update current time with date
         function updateTime() {
             const now = new Date();
-            document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-IN');
+            const timeStr = now.toLocaleTimeString('en-IN', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            const dateStr = now.toLocaleDateString('en-IN', { 
+                weekday: 'short', 
+                day: 'numeric', 
+                month: 'short' 
+            });
+            const timeEl = document.getElementById('currentTime');
+            if (timeEl) {
+                timeEl.innerHTML = `<span style="font-weight: 600;">${timeStr}</span> <span style="opacity: 0.8; margin-left: 8px;">${dateStr}</span>`;
+            }
         }
         setInterval(updateTime, 1000);
         updateTime();
