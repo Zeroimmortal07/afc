@@ -3386,10 +3386,10 @@ body {
         padding: 10px 16px;
     }
     
-    .men/* Mobile: single column for consistent scrolling experience */
+    /* Mobile: single column for consistent scrolling experience */
+    .menu-grid-modern {
         grid-template-columns: 1fr;
-        gap: 16px
-        grid-template-columns: 1fr;
+        gap: 16px;
     }
     
     .cart-item-card {

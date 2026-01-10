@@ -2,8 +2,9 @@
   "name": "afc",
   "version": "1.0.0",
   "description": "AFC Static Website",
+  "main": "server.js",
   "scripts": {
-    "start": "echo 'Static site - no build required'"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
